@@ -1,0 +1,21 @@
+# macOS / editor noise
+.DS_Store
+*.swp
+*.swo
+
+# C build outputs
+*.o
+*.out
+*.dSYM/
+
+# Local compiled binaries
+/main
+/mat
+/mnist
+/arena
+/exercise/arena
+/exercise/autograd
+/exercise/mat
+
+# Generated MNIST data files
+/*.mat
