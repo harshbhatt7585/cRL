@@ -95,6 +95,190 @@ Var* var_create(
 }
 
 
+
+Var* create_node(
+    mem_arena* arena, model_state* model,
+    const VarType* type, Var* a, Var* b, u32 flags
+) {
+    if (type == NULL || type->shape == NULL){
+        return NULL;
+    }
+
+    if (
+        (a != NULL && (a->flags & VAR_FLAG_REQUIRES_GRAD)) ||
+        (b != NULL && (b->flags & VAR_FLAG_REQUIRES_GRAD))
+    ) {
+        flags |= VAR_FLAG_REQUIRES_GRAD;
+    }
+
+    u32 rows = 0;
+    u32 cols = 0;
+    if (!type->shape(a, b, &rows, &cols)) {
+        return NULL;
+    }
+
+    Var* out = var_create(arena, model, rows, cols, flags);
+
+    out->type = type;
+    out->inputs[0] = a;
+    if(type->num_inputs > 1) {
+        out->inputs[1] = b;
+    }
+    return out;
+}
+
+Var* var_relu(
+    mem_arena* arena, model_state* model,
+    Var* input, u32 flags) {
+    return create_node(
+        arena, 
+        model,
+        &VAR_TYPE_RELU,
+        input,
+        NULL,
+        flags
+    );
+}
+
+Var* var_softmax(
+    mem_arena* arena, model_state* model,
+    Var* input, u32 flags
+) {
+    return create_node(
+        arena,
+        model,
+        &VAR_TYPE_SOFTMAX,
+        input,
+        NULL,
+        flags
+    );
+}
+
+Var* var_add(
+    mem_arena* arena, model_state* model,
+    Var* a, Var* b, u32 flags
+) {
+    return create_node(
+        arena, 
+        model,
+        &VAR_TYPE_ADD,
+        a, 
+        b,
+        flags
+    );
+}
+
+Var* var_sub(
+    mem_arena* arena, model_state* model,
+    Var* a, Var* b, u32 flags
+) {
+    return create_node(
+        arena,
+        model,
+        &VAR_TYPE_SUB,
+        a,
+        b,
+        flags
+    );
+}
+
+Var* var_matmul(
+    mem_arena* arena, model_state* model,
+    Var* a, Var* b, u32 flags
+) {
+    return create_node(
+        arena,
+        model,
+        &VAR_TYPE_MATMUL,
+        a,
+        b,
+        flags
+    );
+}
+
+Var* var_cross_entropy(
+    mem_arena* arena, model_state* model,
+    Var* a, Var* b, u32 flags
+) {
+    return create_node(
+        arena,
+        model,
+        &VAR_TYPE_CROSS_ENTROPY,
+        a,
+        b,
+        flags
+    );
+}
+
+
+Graph build_graph(
+    mem_arena* arena, 
+    model_state* model,
+    Var* out_var
+) {
+    mem_arena_temp scratch arena_scratch_get(&arena, 1);
+
+    b8* visited = PUSH_ARRAY(scratch.arena, b8, model->num_vars);
+    
+    u32 stack_size = 0;
+    u32 out_size = 0;
+    Var** stack = PUSH_ARRAY(scratch.arena, Var*, model->num_vars);
+    Var** out = PUSH_ARRAY(scratch.arena, Var*, model->num_vars);
+
+    stack[stack_size++] = out_var;
+
+    while(stack_size > 0) {
+        Var* cur = stack[--stack_size];
+
+        if(cur->index >= model->num_vars) { continue; }
+        if(visited[cur->index]) {
+            if(out_size < model->num_vars) {
+                out[out_size++] = cur;
+            }
+            continue;
+        }
+    }
+    
+    visited[cur->index] = true;
+
+    if(stack_size < model->num_vars) {
+        stack[stack_size++] = cur;
+    }
+
+    u32 num_inputs = cur->type != NULL ? cur->type->num_inputs : 0;
+    for(u32 i=0; i < num_inputs; i++) {
+        Var* input = cur->inputs[i];
+
+        if(input->index >= model->num_vars || visited[input->index]) {
+            continue;
+        }
+
+        for (u32 j=0; j < stack_size; j++) {
+            if (stack[j] == input) {
+                for (u32 k=j; j< stack_size-1; k++) {
+                    stack[k] = stack[k+1];
+                }
+            }
+        }
+
+        if(stack_size < model->num_vars) {
+            stack[stack_size++] = input;
+        }
+    }
+
+    Graph graph = {
+        .size = out_size,
+        .vars = PUSH_ARRAY_NZ(arena, Var*, out_size);
+    }
+
+    memcpy(graph.vars, out, sizeof(Var*)* out_size);
+    arena_scratch_release(scratch);
+    
+    return graph;
+
+}
+
+
 model_state* model_create(mem_arena* arena) {
     model_state* model = PUSH_STRUCT(arena, model_state);
 
