@@ -1,4 +1,5 @@
 #include "autograd.h"
+#include "arena.h"
 
 static void var_relu_forward(Var* var);
 static void var_relu_backward(Var* var);
@@ -72,22 +73,62 @@ Var* var_create(
     mem_arena* arena, model_state* model,
     u32 rows, u32 cols, u32 flags
 ) {
-    Var* out  PUSH_STRUCT(arena, Var);
+    Var* out = PUSH_STRUCT(arena, Var);
+    if (out == NULL) {
+        return NULL;
+    }
 
     out->index = model->num_vars++;
     out->flags = flags;
     out->type = &VAR_TYPE_CREATE;
     out->val = create_matrix(arena, rows, cols);
-
-    if(flags & VAR_FLAG_REQUIRES_GRAD) {
-        out->grad = create_matrix(arena, rows, cols);
+    if (out->val == NULL) {
+        return NULL;
     }
-
-
-
+    if (flags & VAR_FLAG_REQUIRES_GRAD) {
+        out->grad = create_matrix(arena, rows, cols);
+        if (out->grad == NULL) {
+            return NULL;
+        }
+    }
     return out;
 }
 
+
+model_state* create_model(mem_arena* arena, ) {
+    model_state* model = PUSH_STRUCT(arena, model_state);
+
+    return model;
+}
+
+
+static b32 var_shape_same(Var* a, Var* b, u32* rows, u32* cols) {
+    if (a == NULL) {
+        return false;
+    }
+
+    if (b != NULL && (a->val->rows != b->val->rows || a->val->cols != b->val->cols)) {
+        return false;
+    }
+
+    *rows = a->val->rows;
+    *cols = a->val->cols;
+    return true;
+}
+
+static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols) {
+    if (a == NULL || b == NULL) {
+        return false;
+    }
+
+    if (a->val->cols != b->val->rows) {
+        return false;
+    }
+
+    *rows = a->val->rows;
+    *cols = b->val->cols;
+    return true;
+}
 
 static void var_relu_forward(Var* var) { (void)var; }
 static void var_relu_backward(Var* var) { (void)var; }
@@ -105,5 +146,20 @@ static void var_cross_entropy_backward(Var* var) { (void)var; }
 
 
 int main() {
+
+    mem_arena* arena = arena_create(10000);
+    if (arena == NULL) {
+        return 1;
+    }
+
+    matrix* a = create_matrix(arena, 25, 25);
+
+    if (a == NULL) {
+        arena_destroy(arena);
+        return 1;
+    }
+
+    arena_destroy(arena);
+
     return 0;
 }
