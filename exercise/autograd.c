@@ -95,7 +95,7 @@ Var* var_create(
 }
 
 
-model_state* create_model(mem_arena* arena, ) {
+model_state* model_create(mem_arena* arena) {
     model_state* model = PUSH_STRUCT(arena, model_state);
 
     return model;
@@ -153,6 +153,26 @@ int main() {
     }
 
     matrix* a = create_matrix(arena, 25, 25);
+    model_state* model = model_create(arena);
+    if (model == NULL) {
+        arena_destroy(arena);
+        return 1;
+    }
+
+    printf("model: %p\n", (void*)model);
+
+    u32 flags = VAR_FLAG_REQUIRES_GRAD | VAR_FLAG_PARAMETER;
+
+    Var* var_a = var_create(
+        arena, model, 25, 25, flags
+    );
+    if (var_a == NULL) {
+        arena_destroy(arena);
+        return 1;
+    }
+    printf("var ", var_a->val);
+
+    printf("var flags: %u\n", var_a->flags);
 
     if (a == NULL) {
         arena_destroy(arena);
