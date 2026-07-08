@@ -275,7 +275,45 @@ Graph build_graph(
     arena_scratch_release(scratch);
     
     return graph;
+}
 
+void forward_pass(Graph* graph) {
+    for (u32 i=0; i<graph->size; i++) {
+        Var* cur = graph->vars[i];
+
+        if(cur->type != NULL & cur->type->forward != NULL) {
+            cur->type->forward(cur);
+        }
+    }
+}
+
+void backward_pass(Graph* graph) {
+    for(u32 i=0; i < graph->size; i++) {
+        Var* cur = graph->vars[i];
+
+        if((cur->flags & VAR_FLAG_REQUIRES_GRAD) != VAR_FLAG_REQUIRES_GRAD) {
+            continue;
+        }
+
+        if(cur->flags & VAR_FLAG_PARAMETER) {
+            continue;
+        }
+
+        clear(cur->grad);
+    }
+
+    fill(graph->vars[graph->size-1]->grad, 1.0f);
+
+    for(i64 i= (i64)graph->size-1; i>=0; i--) {
+        Var* cur-graph->vars[i];
+
+        if ((cur->flags & VAR_FLAG_REQUIRES_GRAD) == 0) {
+            continue;
+        }
+        if(cur->type != NULL && cur->type->backward != NULL) {
+            cur->type->backward(cur);
+        }
+    }
 }
 
 
