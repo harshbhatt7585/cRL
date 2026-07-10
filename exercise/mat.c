@@ -197,20 +197,6 @@ b32 softmax_add_grad(
 }
 
 
-b32 softmax_add_grad(
-    matrix* out, const matrix* softmax_out, const matrix* grad
-) {
-    u64 size = (u64)softmax_out->rows * softmax_out->cols;
-
-    for(u64 i=0; i<size; i++) {
-        f32 acc = 0.0f;
-        for(u64 j=0; i < size; j++) {
-            f32 local_guard = softmax_out->data[i] *
-            ((i==j ? 1.0f : 0.0f) - softmax_out->data[j]);
-        }
-    }
-}
-
 
 b32 cross_entropy_add_grad(
         matrix* p_grad, matrix* q_grad,
