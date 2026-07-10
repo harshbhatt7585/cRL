@@ -407,34 +407,34 @@ static void var_cross_entropy_backward(Var* var) {
     );
 }
 
-int main(void) {
-    mem_arena* arena = arena_create(10000);
-    if (arena == NULL) {
-        return 1;
-    }
+// int main(void) {
+//     mem_arena* arena = arena_create(10000);
+//     if (arena == NULL) {
+//         return 1;
+//     }
 
-    model_state* model = model_create(arena);
-    if (model == NULL) {
-        arena_destroy(arena);
-        return 1;
-    }
+//     model_state* model = model_create(arena);
+//     if (model == NULL) {
+//         arena_destroy(arena);
+//         return 1;
+//     }
 
-    u32 flags = VAR_FLAG_REQUIRES_GRAD | VAR_FLAG_PARAMETER;
-    Var* var_a = var_create(arena, model, 25, 25, flags);
+//     u32 flags = VAR_FLAG_REQUIRES_GRAD | VAR_FLAG_PARAMETER;
+//     Var* var_a = var_create(arena, model, 25, 25, flags);
 
-    Graph graph = build_graph(arena, model, var_a);
-    printf("graph size: %u\n", graph.size);
+//     Graph graph = build_graph(arena, model, var_a);
+//     printf("graph size: %u\n", graph.size);
 
-    if (var_a == NULL) {
-        arena_destroy(arena);
-        return 1;
-    }
+//     if (var_a == NULL) {
+//         arena_destroy(arena);
+//         return 1;
+//     }
 
-    printf("model: %p\n", (void*)model);
-    printf("var flags: %u\n", var_a->flags);
+//     printf("model: %p\n", (void*)model);
+//     printf("var flags: %u\n", var_a->flags);
 
-    arena_destroy(arena);
-    return 0;
-}
+//     arena_destroy(arena);
+//     return 0;
+// }
 
 
