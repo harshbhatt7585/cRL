@@ -7,7 +7,7 @@ matrix* create(mem_arena* arena, u32 rows, u32 cols) {
     mat->rows = rows;
     mat->cols = cols;
     mat->data = PUSH_ARRAY(arena, f32, (u64)rows * cols);
-
+    
     return mat;
 }
 
