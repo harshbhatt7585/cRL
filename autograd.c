@@ -68,6 +68,14 @@ const VarType VAR_TYPE_CROSS_ENTROPY = {
     .backward = var_cross_entropy_backward,
 };
 
+const VarType VAR_TYPE_POLICY_GRADIENT = {
+    .op = VAR_OP_POLICY_GRADIENT,
+    .num_inputs = 2,
+    .shape = var_shape_name,
+    .forward = var_policy_gradient_forward,
+    .backward = var_policy_gradient_backward
+}
+
 Var* var_create(
     mem_arena* arena, model_state* model,
     u32 rows, u32 cols, u32 flags
@@ -189,6 +197,14 @@ Var* var_cross_entropy(
 ) {
     return create_node(arena, model, &VAR_TYPE_CROSS_ENTROPY, p, q, flags);
 }
+
+Var* var_policy_gradient(
+    mem_arena* arena, model_state* model,
+    Var* log_probs, Var* rt
+) {
+    return create_node(arena, model, &VAR_TYPE_POLICY_GRADIENT, log_probs, rt, flags);
+}
+
 
 Graph build_graph(
     mem_arena* arena, model_state* model, Var* out_var
@@ -390,6 +406,7 @@ static void var_cross_entropy_backward(Var* var) {
         p->val, q->val, var->grad
     );
 }
+
 
 model_state* model_create(mem_arena* arena) {
     model_state* model = PUSH_STRUCT(arena, model_state);
