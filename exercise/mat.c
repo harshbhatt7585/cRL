@@ -1,6 +1,7 @@
 #include "mat.h"
 #include "prng.h"
 
+
 matrix* create_matrix(mem_arena* arena, u32 rows, u32 cols) {
     matrix* out = PUSH_STRUCT(arena, matrix);
     if (out == NULL) {
