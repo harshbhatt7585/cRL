@@ -7,7 +7,7 @@ matrix* create(mem_arena* arena, u32 rows, u32 cols) {
     mat->rows = rows;
     mat->cols = cols;
     mat->data = PUSH_ARRAY(arena, f32, (u64)rows * cols);
-    
+
     return mat;
 }
 
@@ -243,6 +243,26 @@ b32 cross_entropy(matrix* out, const matrix* p, const matrix* q) {
     return true;
 }
 
+
+
+b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt) {
+
+    if(probs->rows != rt->rows || probs->cols != rt->cols) { return false;}
+    if(out->rows != rt->rows || out->cols != rt->cols) { return false; }
+
+    u32 size = (u32)out->rows * out->cols;
+
+    for (u32 i=0; i<size; i++) {
+        f32 p = MAX(probs->data[i], 1e-8f);
+        out->data[i] = -logf(p) * rt->data[i];
+    } 
+    return true;
+}
+
+
+
+
+
 b32 relu_add_grad(matrix* out, const matrix* in, const matrix* grad) {
     if (out->rows != in->rows || out->cols != in->cols) {
         return false;
@@ -258,6 +278,7 @@ b32 relu_add_grad(matrix* out, const matrix* in, const matrix* grad) {
 
     return true;
 }
+
 
 b32 softmax_add_grad(
     matrix* out, const matrix* softmax_out, const matrix* grad
