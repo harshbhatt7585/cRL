@@ -163,7 +163,8 @@ void build_state_vector(
 
 void train(
     model_state* model,
-    SnakeENV* env
+    SnakeENV* env,
+    mem_arena* arena
 ) {
     u32 EPOCHS = 10;
     u32 batch_size = 32;
@@ -188,16 +189,16 @@ void train(
             ACTION action = argmax(model->output->val);
             
 
-            printf("Output: %u\n", action);
-            take_action(env, action);
+            // printf("Output: %u\n", action);
+            take_action(env, randn(4));
             f32 reward = get_reward(env);
             env->score += reward;
             b32 is_game_over = game_over(env);
 
             // printf("Env %d\n",env->x);
             // printf("Env %d\n",env->y);
-            printf("Env %llu\n",env->score);
-            printf("GAME OVER: %u\n", is_game_over);  
+            // printf("Env %llu\n",env->score);
+            // printf("GAME OVER: %u\n", is_game_over);  
             
             
             if (is_game_over) {
@@ -229,12 +230,23 @@ void train(
         for(u64 b=start_idx; b < end_idx; b++) {
             Trajactory traj = buffer.trajactories[b];
 
+            printf("LEN %i\n", traj.len);
+
+            matrix* policy_loss = create(arena, traj.len, 1); 
+
+
             // TODO:  Episode length can vary based on game over or not,
             // make sure you are iterating and have the information of len
-            for (u32 t=0; t < episode_len; t++) {
+            for (u32 t=0; t < traj.len; t++) {
                 State state_ = traj.states[t];
                 State food_state_ = traj.food_states[t];
                 ACTION action_ = traj.actions[t];
+                f32 reward_ = traj.rewards[t];
+                f32 return_ = 0;
+
+                for (u32 j=t; j <traj.len; j++) {
+                    return_ += traj.rewards[j];
+                }
                 
                 build_state_vector(
                     model->input->val,
@@ -243,7 +255,17 @@ void train(
                     env->cols,
                     env->grid_size
                 );
+                
+                forward_pass(&model->forward_graph);
+
+                f32 p = MAX(model->output->val->data[action_], 1e-8f);
+                policy_loss->data[t] = -logf(p) * return_;
+
+                printf("LOG PROBS %f\n", policy_loss->data[t]);
             }
+
+            model->cost->val = policy_loss;
+            backward_pass(&model->cost_graph);
         }
     }
 
@@ -280,7 +302,7 @@ int main() {
     //         break;
     //     }
     // }
-    train(model, env);
+    train(model, env, arena);
 
     return 0;
 }
