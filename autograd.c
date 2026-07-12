@@ -12,6 +12,8 @@ static void var_matmul_forward(Var* var);
 static void var_matmul_backward(Var* var);
 static void var_cross_entropy_forward(Var* var);
 static void var_cross_entropy_backward(Var* var);
+static void var_policy_gradient_forward(Var* var);
+static void var_policy_gradient_backward(Var* var);
 static b32 var_shape_same(Var* a, Var* b, u32* rows, u32* cols);
 static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols);
 
@@ -71,10 +73,10 @@ const VarType VAR_TYPE_CROSS_ENTROPY = {
 const VarType VAR_TYPE_POLICY_GRADIENT = {
     .op = VAR_OP_POLICY_GRADIENT,
     .num_inputs = 2,
-    .shape = var_shape_name,
+    .shape = var_shape_same,
     .forward = var_policy_gradient_forward,
     .backward = var_policy_gradient_backward
-}
+};
 
 Var* var_create(
     mem_arena* arena, model_state* model,
@@ -200,9 +202,9 @@ Var* var_cross_entropy(
 
 Var* var_policy_gradient(
     mem_arena* arena, model_state* model,
-    Var* log_probs, Var* rt
+    Var* probs, Var* rt, u32 flags
 ) {
-    return create_node(arena, model, &VAR_TYPE_POLICY_GRADIENT, log_probs, rt, flags);
+    return create_node(arena, model, &VAR_TYPE_POLICY_GRADIENT, probs, rt, flags);
 }
 
 
@@ -407,9 +409,20 @@ static void var_cross_entropy_backward(Var* var) {
     );
 }
 
+static void var_policy_gradient_forward(Var* var) {
+    policy_gradient(var->val, var->inputs[0]->val, var->inputs[1]->val);
+}
+
+static void var_policy_gradient_backward(Var* var) {
+    Var* probs = var->inputs[0];
+    Var* rt = var->inputs[1];
+
+    if (var_requires_grad(probs)) {
+        policy_gradient_add_grad(probs->grad, probs->val, rt->val, var->grad);
+    }
+}
 
 model_state* model_create(mem_arena* arena) {
     model_state* model = PUSH_STRUCT(arena, model_state);
-
     return model;
 }
