@@ -116,9 +116,14 @@ f32 get_reward(const SnakeENV* env) {
     return reward - 0.1;
 }
 
-// TODO: reset the env
 void reset_state(SnakeENV* env) {
-
+    env->x = 0;
+    env->y = 0;
+    env->score = 0;
+    env->food_pos_x = 5;
+    env->food_pos_y = 5;
+    env->pov = RIGHT;
+    env->steps = 0;
 }
 
 void take_action(SnakeENV* env, u32 action) {
@@ -167,6 +172,8 @@ void train(
     ReplayBuffer buffer = {0};
 
     for(u32 i = 0; i < rollout_size; i++) {
+
+        reset_state(env);
         // Rollout phase - collect experience from the model
         for(u32 t_i = 0; t_i < episode_len; t_i++) {
             // ACTION action = randn(4);
@@ -205,6 +212,7 @@ void train(
             printf("x: %d\n", buffer.trajactories[i].states[t_i].x);
 
             if (is_game_over) {
+                reset_state(env);
                 break;
             }
         }
