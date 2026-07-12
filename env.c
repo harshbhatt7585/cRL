@@ -191,6 +191,19 @@ void train(
             }
         }
     }
+    // Training Phase
+    for(u32 epoch=0; epoch < EPOCHS; epoch++) {
+        
+        // Sample batch from buffer
+        u64 start_idx = randn( (u64)(BUFFER_SIZE - batch_size));
+        u64 end_idx = start_idx + batch_size;
+
+        for(u64 b=start_idx; b < end_idx; b++) {
+            Trajactory traj = buffer.trajactories[b];
+        }
+
+
+    }
 
 
 }
