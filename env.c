@@ -197,7 +197,13 @@ void train(
             // printf("Env %d\n",env->x);
             // printf("Env %d\n",env->y);
             printf("Env %llu\n",env->score);
-            printf("GAME OVER: %u\n", is_game_over);     
+            printf("GAME OVER: %u\n", is_game_over);  
+            
+            
+            if (is_game_over) {
+                reset_state(env);
+                break;
+            }
 
             // Store the data in buffer
             buffer.trajactories[i].states[t_i].x = env->x;
@@ -211,10 +217,6 @@ void train(
 
             printf("x: %d\n", buffer.trajactories[i].states[t_i].x);
 
-            if (is_game_over) {
-                reset_state(env);
-                break;
-            }
         }
     }
     // Training Phase
