@@ -138,6 +138,8 @@ void take_action(SnakeENV* env, u32 action) {
     }
 }
 
+
+
 void train(
     model_state* model,
     SnakeENV* env
@@ -146,14 +148,22 @@ void train(
     u32 batch_size = 32;
     u32 rollout_size = 128;
     u32 episode_len = 100;
+    ReplayBuffer buffer = {0};
 
-    for(u32 i=0; i <rollout_size; i++) {
+    for(u32 i = 0; i < rollout_size; i++) {
         // Rollout phase - collect experience from the model
-        for(u32 t_i=0; i<episode_len; t_i++) {
+        for(u32 t_i = 0; t_i < episode_len; t_i++) {
             // ACTION action = randn(4);
             forward_pass(&model->forward_graph);
 
+            matrix* probs = model->output->val;
+            f32 log_probs[probs->rows * probs->cols];
+            for(u32 i=0; i<probs->rows * probs->cols; i++) {
+                log_probs[i] = logf(probs->data[i]);
+            } 
+
             ACTION action = argmax(model->output->val);
+            
 
             printf("Output: %u\n", action);
             take_action(env, action);
@@ -167,14 +177,14 @@ void train(
             printf("GAME OVER: %u\n", is_game_over);     
 
             // Store the data in buffer
-            ReplayBuffer buffer;
-            buffer.trajactories[t_i].states[i].x = env->x;
-            buffer.trajactories[t_i].states[i].y = env->y;
-            buffer.trajactories[t_i].actions[i] = action;
-            buffer.trajactories[t_i].rewards[i] = reward;
-            buffer.trajactories[t_i].dones[i] = is_game_over;
+            buffer.trajactories[i].states[t_i].x = env->x;
+            buffer.trajactories[i].states[t_i].y = env->y;
+            buffer.trajactories[i].actions[t_i] = action;
+            buffer.trajactories[i].rewards[t_i] = reward;
+            buffer.trajactories[i].dones[t_i] = is_game_over;
+            buffer.trajactories[i].len = t_i + 1;
 
-            printf("x: %d\n", buffer.trajactories[t_i].states[i].x);
+            printf("x: %d\n", buffer.trajactories[i].states[t_i].x);
 
             if (is_game_over) {
                 break;
