@@ -45,6 +45,7 @@ typedef struct {
 
 typedef struct {
     State states[EPISODE_LEN];
+    State food_states[EPISODE_LEN];
     ACTION actions[EPISODE_LEN];
     f32 rewards[EPISODE_LEN];
     State next_states[EPISODE_LEN];
@@ -115,7 +116,7 @@ f32 get_reward(const SnakeENV* env) {
     return reward - 0.1;
 }
 
-
+// TODO: reset the env
 void reset_state(SnakeENV* env) {
 
 }
@@ -139,6 +140,21 @@ void take_action(SnakeENV* env, u32 action) {
 }
 
 
+void build_state_vector(
+    matrix* in,
+    State state,
+    State food_state,
+    u32 cols,
+    u32 grid_size
+) {
+    clear(in);
+
+    u32 snake_i = (u32)state.y * cols + (u32)state.x;
+    u32 food_i = (u32)food_state.y * cols + (u32)food_state.x;
+
+    in->data[snake_i] = 1.0f;
+    in->data[grid_size + food_i] = 1.0f;
+}
 
 void train(
     model_state* model,
@@ -179,6 +195,8 @@ void train(
             // Store the data in buffer
             buffer.trajactories[i].states[t_i].x = env->x;
             buffer.trajactories[i].states[t_i].y = env->y;
+            buffer.trajactories[i].food_states[t_i].x = env->food_pos_x;
+            buffer.trajactories[i].food_states[t_i].y = env->food_pos_y;
             buffer.trajactories[i].actions[t_i] = action;
             buffer.trajactories[i].rewards[t_i] = reward;
             buffer.trajactories[i].dones[t_i] = is_game_over;
@@ -200,11 +218,24 @@ void train(
 
         for(u64 b=start_idx; b < end_idx; b++) {
             Trajactory traj = buffer.trajactories[b];
+
+            // TODO:  Episode length can vary based on game over or not,
+            // make sure you are iterating and have the information of len
+            for (u32 t=0; t < episode_len; t++) {
+                State state_ = traj.states[t];
+                State food_state_ = traj.food_states[t];
+                ACTION action_ = traj.actions[t];
+                
+                build_state_vector(
+                    model->input->val,
+                    state_,
+                    food_state_,
+                    env->cols,
+                    env->grid_size
+                );
+            }
         }
-
-
     }
-
 
 }
 
