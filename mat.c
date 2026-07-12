@@ -251,7 +251,7 @@ b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt) {
 
     u64 size = (u64)out->rows * out->cols;
 
-    for (uu6432 i=0; i<size; i++) {
+    for (u64 i = 0; i < size; i++) {
         f32 p = MAX(probs->data[i], 1e-8f);
         out->data[i] = -logf(p) * rt->data[i];
     } 
@@ -261,18 +261,18 @@ b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt) {
 
 b32 policy_gradient_add_grad(
     matrix* prob_grads,
-    matrix* rt_grad,
     const matrix* probs,
     const matrix* rt,
-    const matrix* grads
+    const matrix* grad
 ) {
     if (probs->rows != rt->rows || probs->cols != rt->cols) { return false; }
     if (grad->rows != probs->rows || grad->cols != probs->cols) { return false; }
+    if (prob_grads->rows != probs->rows || prob_grads->cols != probs->cols) { return false; }
 
-    u64 size = (u64)out->rows * out->cols;
-    for (u64 i=0; i<size; i++) {
+    u64 size = (u64)probs->rows * probs->cols;
+    for (u64 i = 0; i < size; i++) {
         f32 p = MAX(probs->data[i], 1e-8f);
-        probs_grad->data[i] += grad->data[i] * (-rt->data[i] / p);
+        prob_grads->data[i] += grad->data[i] * (-rt->data[i] / p);
     }
     return true;
 
