@@ -215,9 +215,6 @@ void train(
             buffer.trajactories[i].rewards[t_i] = reward;
             buffer.trajactories[i].dones[t_i] = is_game_over;
             buffer.trajactories[i].len = t_i + 1;
-
-            printf("x: %d\n", buffer.trajactories[i].states[t_i].x);
-
         }
     }
     // Training Phase
@@ -230,13 +227,9 @@ void train(
         for(u64 b=start_idx; b < end_idx; b++) {
             Trajactory traj = buffer.trajactories[b];
 
-            printf("LEN %i\n", traj.len);
-
             matrix* policy_loss = create(arena, traj.len, 1); 
 
 
-            // TODO:  Episode length can vary based on game over or not,
-            // make sure you are iterating and have the information of len
             for (u32 t=0; t < traj.len; t++) {
                 State state_ = traj.states[t];
                 State food_state_ = traj.food_states[t];
@@ -261,10 +254,11 @@ void train(
                 f32 p = MAX(model->output->val->data[action_], 1e-8f);
                 policy_loss->data[t] = -logf(p) * return_;
 
-                printf("LOG PROBS %f\n", policy_loss->data[t]);
+                
             }
 
             model->cost->val = policy_loss;
+            printf("Loss: %f\n", sum(policy_loss));
             backward_pass(&model->cost_graph);
         }
     }
