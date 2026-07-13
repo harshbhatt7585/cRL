@@ -245,7 +245,7 @@ void train(
                 Trajactory traj = buffer.trajactories[b];
     
                 matrix* policy_loss = create(arena, traj.len, 1); 
-    
+                f32 rt = 0.0f;
     
                 for (u32 t=0; t < traj.len; t++) {
                     State state_ = traj.states[t];
@@ -253,12 +253,14 @@ void train(
                     ACTION action_ = traj.actions[t];
                     f32 reward_ = traj.rewards[t];
                     f32 return_ = 0;
+
     
                     for (u32 j=t; j <traj.len; j++) {
                         return_ += traj.rewards[j];
                     }
                     if(t==(traj.len-1)) {
                         printf("Return: %f\n", return_);
+                        rt = return_;
                     }
                     
                     build_state_vector(
@@ -268,15 +270,33 @@ void train(
                         env->cols,
                         env->grid_size
                     );
+
+                    clear(model->desired_output->val);
+                    model->desired_output->val->data[action_] = return_;
                     
-                    forward_pass(&model->forward_graph);
+                    forward_pass(&model->cost_graph);
+                    backward_pass(&model->cost_graph);
+                    
     
                     f32 p = MAX(model->output->val->data[action_], 1e-8f);
                     policy_loss->data[t] = -logf(p) * return_;
 
                 }
-                model->cost->val = policy_loss;
                 // printf("Loss: %f\n", sum(policy_loss) / batch_size);
+
+                for(u32 i=0; i< model->cost_graph.size; i++) {
+                    Var* cur = model->cost_graph.vars[i];
+
+                    if ((cur->flags & VAR_FLAG_PARAMETER) != VAR_FLAG_PARAMETER) {
+                        continue;
+                    }
+                    scale(
+                        cur->grad,
+                        0.05f / batch_size 
+                    );
+                    sub(cur->val, cur->val, cur->grad);
+                  }
+                
 
                 backward_pass(&model->cost_graph);
             }
