@@ -190,64 +190,56 @@ void train(
     for (u32 epoch=0; epoch < EPOCHS; epoch++) {
 
         for(u32 i = 0; i < rollout_size; i++) {
-
             reset_state(env);
+
+            Trajactory* traj = &buffer.trajactories[i];
+            traj->len = 0;
+
             // Rollout phase - collect experience from the model
-            for(u32 t_i = 0; t_i < episode_len; t_i++) {
-                // ACTION action = randn(4);
-                
+            for(u32 t = 0; t < episode_len; t++) {
+                State state = {
+                    .x = env->x,
+                    .y = env->y,
+                };
+
+                State food_state = {
+                    .x = (i32)env->food_pos_x,
+                    .y = (i32)env->food_pos_y,
+                };
+
                 build_state_vector(
                     model->input->val,
-                    (State) {
-                        .x = env->x,
-                        .y = env->y
-                    },
-                    (State){
-                        .x = env->food_pos_x,
-                        .y = env->food_pos_y
-                    },
+                    state,
+                    food_state,
                     env->cols,
                     env->grid_size
                 );
 
-
                 forward_pass(&model->forward_graph);
-    
-                matrix* probs = model->output->val;
-                f32 log_probs[probs->rows * probs->cols];
-                for(u32 i=0; i<probs->rows * probs->cols; i++) {
-                    log_probs[i] = logf(probs->data[i]);
-                } 
-    
-                ACTION action = sample_action(probs);
-                
-    
-                // printf("Output: %u\n", action);
+                ACTION action = sample_action(model->output->val);
+
                 take_action(env, action);
+
                 f32 reward = get_reward(env);
                 env->score += reward;
-                b32 is_game_over = game_over(env);
-    
-                // printf("Env %d\n",env->x);
-                // printf("Env %d\n",env->y);
-                // printf("Env %llu\n",env->score);
-                // printf("GAME OVER: %u\n", is_game_over);  
-                
-                
-                if (is_game_over) {
-                    reset_state(env);
+                b32 done = game_over(env);
+
+                State next_state = {
+                    .x = env->x,
+                    .y = env->y,
+                };
+
+                traj->states[t] = state;
+                traj->food_states[t] = food_state;
+                traj->actions[t] = action;
+                traj->rewards[t] = reward;
+                traj->next_states[t] = next_state;
+                traj->dones[t] = done;
+                traj->len = t + 1;
+
+                if (done) {
                     break;
                 }
-    
-                // Store the data in buffer
-                buffer.trajactories[i].states[t_i].x = env->x;
-                buffer.trajactories[i].states[t_i].y = env->y;
-                buffer.trajactories[i].food_states[t_i].x = env->food_pos_x;
-                buffer.trajactories[i].food_states[t_i].y = env->food_pos_y;
-                buffer.trajactories[i].actions[t_i] = action;
-                buffer.trajactories[i].rewards[t_i] = reward;
-                buffer.trajactories[i].dones[t_i] = is_game_over;
-                buffer.trajactories[i].len = t_i + 1;
             }
         }
         // Training Phase
