@@ -23,13 +23,16 @@ typedef enum  {
 typedef struct {
     i32 x;
     i32 y;
+} State;
+
+typedef struct {
+    State snake;
+    State food;
     u64 score;
     
     u32 rows;
     u32 cols;
     u32 grid_size;
-    u32 food_pos_x;
-    u32 food_pos_y;
     u64 steps;
     ACTION pov;
 } SnakeENV;
@@ -37,11 +40,6 @@ typedef struct {
 
 #define BUFFER_SIZE 1024
 #define EPISODE_LEN 100
-
-typedef struct {
-    i32 x;
-    i32 y;
-} State;
 
 typedef struct {
     State states[EPISODE_LEN];
@@ -73,14 +71,12 @@ SnakeENV* create_env(
         return NULL;
     }
 
-    env->x = 0;
-    env->y = 0;
+    env->snake = (State){ .x = 0, .y = 0 };
+    env->food = (State){ .x = 5, .y = 5 };
     env->rows = side;
     env->cols = side;
     env->grid_size = grid_size;
     env->score = 0;
-    env->food_pos_x = 5;
-    env->food_pos_y = 5;
     env->pov = RIGHT;
     env->steps = 0;
     return env;
@@ -88,23 +84,23 @@ SnakeENV* create_env(
 
 
 b32 game_over(SnakeENV* env) {
-    return env->x < 0 || env->x >= (i32)env->cols ||
-           env->y < 0 || env->y >= (i32)env->rows;
+    return env->snake.x < 0 || env->snake.x >= (i32)env->cols ||
+           env->snake.y < 0 || env->snake.y >= (i32)env->rows;
 }
 
 
 f32 get_reward(const SnakeENV* env) {
     f32 reward = 0.0f;
 
-    if (env->x == env->food_pos_x && env->y == env->food_pos_y) {
+    if (env->snake.x == env->food.x && env->snake.y == env->food.y) {
         reward += 5.0f;
     }
 
-    if (env->x < 0 || env->x >= env->cols) {
+    if (env->snake.x < 0 || env->snake.x >= (i32)env->cols) {
         reward -= 1.0f;
     }
 
-    if (env->y < 0 || env->y >= env->rows) {
+    if (env->snake.y < 0 || env->snake.y >= (i32)env->rows) {
         reward -= 1.0f;
     }
 
@@ -112,11 +108,9 @@ f32 get_reward(const SnakeENV* env) {
 }
 
 void reset_state(SnakeENV* env) {
-    env->x = 0;
-    env->y = 0;
+    env->snake = (State){ .x = 0, .y = 0 };
+    env->food = (State){ .x = 5, .y = 5 };
     env->score = 0;
-    env->food_pos_x = 5;
-    env->food_pos_y = 5;
     env->pov = RIGHT;
     env->steps = 0;
 }
@@ -126,16 +120,16 @@ void take_action(SnakeENV* env, u32 action) {
         return;
     }
     else if(action == LEFT) {
-        env->x -= 1;
+        env->snake.x -= 1;
     }
     else if(action == RIGHT) {
-        env->x += 1;
+        env->snake.x += 1;
     }
     else if(action == UP) {
-        env->y += 1;
+        env->snake.y += 1;
     }
     else if(action == DOWN) {
-        env->y -= 1;
+        env->snake.y -= 1;
     }
 }
 
@@ -192,15 +186,8 @@ void train(
 
             // Rollout phase - collect experience from the model
             for(u32 t = 0; t < episode_len; t++) {
-                State state = {
-                    .x = env->x,
-                    .y = env->y,
-                };
-
-                State food_state = {
-                    .x = (i32)env->food_pos_x,
-                    .y = (i32)env->food_pos_y,
-                };
+                State state = env->snake;
+                State food_state = env->food;
 
                 build_state_vector(
                     model->input->val,
@@ -219,10 +206,7 @@ void train(
                 env->score += reward;
                 b32 done = game_over(env);
 
-                State next_state = {
-                    .x = env->x,
-                    .y = env->y,
-                };
+                State next_state = env->snake;
 
                 traj->states[t] = state;
                 traj->food_states[t] = food_state;
@@ -332,8 +316,8 @@ int main() {
     //     b32 is_game_over = game_over(env);
 
 
-    //     printf("Env %d\n",env->x);
-    //     printf("Env %d\n",env->y);
+    //     printf("Env %d\n",env->snake.x);
+    //     printf("Env %d\n",env->snake.y);
     //     printf("Env %llu\n",env->score);
     //     printf("Env %f\n",reward);
     //     printf("GAME OVER: %u\n", is_game_over);
