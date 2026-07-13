@@ -195,6 +195,22 @@ void train(
             // Rollout phase - collect experience from the model
             for(u32 t_i = 0; t_i < episode_len; t_i++) {
                 // ACTION action = randn(4);
+                
+                build_state_vector(
+                    model->input->val,
+                    (State) {
+                        .x = env->x,
+                        .y = env->y
+                    },
+                    (State){
+                        .x = env->food_pos_x,
+                        .y = env->food_pos_y
+                    },
+                    env->cols,
+                    env->grid_size
+                );
+
+
                 forward_pass(&model->forward_graph);
     
                 matrix* probs = model->output->val;
