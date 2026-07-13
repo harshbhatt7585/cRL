@@ -24,6 +24,14 @@ void create_actor_critic_model(
     Var* W2 = var_create(arena, model, 4, 128, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
     Var* b2 = var_create(arena, model, 4, 1, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
 
+    f32 bound0 = sqrtf(6.0f / (72 + 128));
+    f32 bound1 = sqrtf(6.0f / (128 + 128));
+    f32 bound2 = sqrtf(6.0f / (128 + 4));
+  
+    fill_rand(W0->val, -bound0, bound0);
+    fill_rand(W1->val, -bound1, bound1);
+    fill_rand(W2->val, -bound2, bound2);
+
     Var* z0_a = var_matmul(arena, model, W0, input, 0);
     Var* z0_b = var_add(arena, model, z0_a, b0, 0);
     Var* z1_a = var_matmul(arena, model, W1, z0_b, 0);
