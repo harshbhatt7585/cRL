@@ -177,7 +177,6 @@ void train(
     mem_arena* arena
 ) {
     u32 EPOCHS = 512;
-    u32 microbatch = 64;
     u32 batch_size = 32;
     u32 rollout_size = 128;
     u32 episode_len = 100;
@@ -210,7 +209,7 @@ void train(
                 take_action(env, action);
 
 
-                printf("X: %i\n", env->snake.x);
+                // printf("X: %i\n", env->snake.x);
                 f32 reward = get_reward(env);
                 env->score += reward;
                 b32 done = game_over(env);
@@ -231,11 +230,9 @@ void train(
             }
         }
         // Training Phase
-        for(u32 m=0; m < microbatch; m++) {
-            
-            // Sample batch from buffer
-            u64 start_idx = randn( (u64)(BUFFER_SIZE - batch_size));
-            u64 end_idx = start_idx + batch_size;
+        // Sample batch from buffer
+        u64 start_idx = randn( (u64)(BUFFER_SIZE - batch_size));
+        u64 end_idx = start_idx + batch_size;
     
             for(u64 b=start_idx; b < end_idx; b++) {
                 Trajactory traj = buffer.trajactories[b];
@@ -299,7 +296,6 @@ void train(
                 
 
                 backward_pass(&model->cost_graph);
-            }
         }
 
     }
