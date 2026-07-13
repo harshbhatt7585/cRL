@@ -250,6 +250,15 @@ void train(
                 }
             }
         }
+
+        for (u32 i = 0; i < model->cost_graph.size; i++) {
+            Var* cur = model->cost_graph.vars[i];
+
+            if (cur->flags & VAR_FLAG_PARAMETER) {
+                clear(cur->grad);
+            }
+        }
+
         // Training Phase
         // Sample batch from buffer
         u64 start_idx = randn( (u64)(BUFFER_SIZE - batch_size));
@@ -305,6 +314,7 @@ void train(
                 for(u32 i=0; i< model->cost_graph.size; i++) {
                     Var* cur = model->cost_graph.vars[i];
 
+
                     if ((cur->flags & VAR_FLAG_PARAMETER) != VAR_FLAG_PARAMETER) {
                         continue;
                     }
@@ -314,9 +324,7 @@ void train(
                     );
                     sub(cur->val, cur->val, cur->grad);
                   }
-                
 
-                backward_pass(&model->cost_graph);
         }
 
     }
