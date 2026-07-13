@@ -12,10 +12,10 @@
 void create_actor_critic_model(
     mem_arena* arena, model_state* model
 ) {
-    Var* input = var_create(arena, model, 36, 1, VAR_FLAG_NONE);
+    Var* input = var_create(arena, model, 72, 1, VAR_FLAG_NONE);
     model->input = input;
 
-    Var* W0 = var_create(arena, model, 128, 36, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
+    Var* W0 = var_create(arena, model, 128, 72, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
     Var* b0 = var_create(arena, model, 128, 1, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
 
     Var* W1 = var_create(arena, model, 128, 128, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
@@ -34,10 +34,10 @@ void create_actor_critic_model(
     Var* output = var_softmax(arena, model, z2_b, VAR_FLAG_NONE);
     model->output = output;
 
-    Var* y = var_create(arena, model, 4, 1, VAR_FLAG_NONE);
-    model->desired_output = y;
+    Var* returns = var_create(arena, model, 4, 1, VAR_FLAG_NONE);
+    model->desired_output = returns;
 
-    Var* cost = var_cross_entropy(arena, model, y, output, VAR_FLAG_NONE);
+    Var* cost = var_reinforce_loss(arena, model, output, returns, VAR_FLAG_NONE);
     model->cost = cost;
 }
 
