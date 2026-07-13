@@ -29,7 +29,8 @@ typedef struct {
 typedef struct {
     State snake;
     State food;
-    u64 score;
+    f32 score;
+    u32 foods_eaten;
     
     u32 rows;
     u32 cols;
@@ -77,7 +78,8 @@ SnakeENV* create_env(
     env->rows = side;
     env->cols = side;
     env->grid_size = grid_size;
-    env->score = 0;
+    env->score = 0.0f;
+    env->foods_eaten = 0;
     env->pov = RIGHT;
     env->steps = 0;
     return env;
@@ -98,10 +100,11 @@ b32 game_over(SnakeENV* env) {
 
 
 f32 get_reward(SnakeENV* env) {
-    f32 reward = -0.1f;
+    f32 reward = -0.01f;
 
     if (env->snake.x == env->food.x && env->snake.y == env->food.y) {
         reward += 5.0f;
+        env->foods_eaten++;
 
         State new_food;
         do {
@@ -120,7 +123,7 @@ f32 get_reward(SnakeENV* env) {
         env->snake.y < 0 ||
         env->snake.y >= (i32)env->rows
     ) {
-        reward -= 1.0f;
+        reward -= 10.0f;
     }
 
     return reward;
@@ -129,7 +132,8 @@ f32 get_reward(SnakeENV* env) {
 void reset_state(SnakeENV* env) {
     env->snake = (State){ .x = 0, .y = 0 };
     env->food = (State){ .x = 5, .y = 5 };
-    env->score = 0;
+    env->score = 0.0f;
+    env->foods_eaten = 0;
     env->pov = RIGHT;
     env->steps = 0;
 }
@@ -344,7 +348,7 @@ int main() {
 
     //     printf("Env %d\n",env->snake.x);
     //     printf("Env %d\n",env->snake.y);
-    //     printf("Env %llu\n",env->score);
+    //     printf("Env %f\n",env->score);
     //     printf("Env %f\n",reward);
     //     printf("GAME OVER: %u\n", is_game_over);
 
