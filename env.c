@@ -83,6 +83,13 @@ SnakeENV* create_env(
     return env;
 }
 
+State get_random_food_loc(u32 cols, u32 rows) {
+    return (State) {
+        .x = (i32)randn(cols),
+        .y = (i32)randn(rows),
+    };
+}
+
 
 b32 game_over(SnakeENV* env) {
     return env->snake.x < 0 || env->snake.x >= (i32)env->cols ||
@@ -90,22 +97,33 @@ b32 game_over(SnakeENV* env) {
 }
 
 
-f32 get_reward(const SnakeENV* env) {
-    f32 reward = 0.0f;
+f32 get_reward(SnakeENV* env) {
+    f32 reward = -0.1f;
 
     if (env->snake.x == env->food.x && env->snake.y == env->food.y) {
         reward += 5.0f;
+
+        State new_food;
+        do {
+            new_food = get_random_food_loc(env->cols, env->rows);
+        } while (
+            new_food.x == env->snake.x &&
+            new_food.y == env->snake.y
+        );
+
+        env->food = new_food;
     }
 
-    if (env->snake.x < 0 || env->snake.x >= (i32)env->cols) {
+    if (
+        env->snake.x < 0 ||
+        env->snake.x >= (i32)env->cols ||
+        env->snake.y < 0 ||
+        env->snake.y >= (i32)env->rows
+    ) {
         reward -= 1.0f;
     }
 
-    if (env->snake.y < 0 || env->snake.y >= (i32)env->rows) {
-        reward -= 1.0f;
-    }
-
-    return reward - 0.1;
+    return reward;
 }
 
 void reset_state(SnakeENV* env) {
@@ -207,7 +225,6 @@ void train(
                 ACTION action = sample_action(model->output->val);
 
                 take_action(env, action);
-
 
                 // printf("X: %i\n", env->snake.x);
                 f32 reward = get_reward(env);
