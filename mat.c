@@ -259,7 +259,7 @@ b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt) {
 }
 
 
-b32 policy_gradient_add_grad(
+b32 reinforce_add_grad(
     matrix* prob_grads,
     const matrix* probs,
     const matrix* rt,
