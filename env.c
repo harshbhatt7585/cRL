@@ -239,26 +239,29 @@ void train(
     
             for(u64 b=start_idx; b < end_idx; b++) {
                 Trajactory traj = buffer.trajactories[b];
-    
+
+                if (traj.len == 0) {
+                    continue;
+                }
+
+                f32 returns[EPISODE_LEN];
+                f32 G = 0.0f;
+                f32 gamma = 0.99f;
+
+                for (i32 t = (i32)traj.len - 1; t >= 0; t--) {
+                    G = traj.rewards[t] + gamma * G;
+                    returns[t] = G;
+                }
+
+                printf("Episode return: %f\n", returns[0]);
+
                 matrix* policy_loss = create(arena, traj.len, 1); 
-                f32 rt = 0.0f;
-    
+
                 for (u32 t=0; t < traj.len; t++) {
                     State state_ = traj.states[t];
                     State food_state_ = traj.food_states[t];
                     ACTION action_ = traj.actions[t];
-                    f32 reward_ = traj.rewards[t];
-                    f32 return_ = 0;
-
-    
-                    for (u32 j=t; j <traj.len; j++) {
-                        return_ += traj.rewards[j];
-                    }
-                    if(t==(traj.len-1)) {
-                        printf("Return: %f\n", return_);
-                        
-                        rt = return_;
-                    }
+                    f32 return_ = returns[t];
                     
                     build_state_vector(
                         model->input->val,
