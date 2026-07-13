@@ -21,7 +21,7 @@ typedef enum {
     VAR_OP_SUB,
     VAR_OP_MATMUL,
     VAR_OP_CROSS_ENTROPY,
-    VAR_OP_POLICY_GRADIENT,
+    VAR_OP_REINFORCE_LOSS,
 } VarOp;
 
 #define VAR_MAX_INPUTS 2
@@ -56,7 +56,7 @@ extern const VarType VAR_TYPE_ADD;
 extern const VarType VAR_TYPE_SUB;
 extern const VarType VAR_TYPE_MATMUL;
 extern const VarType VAR_TYPE_CROSS_ENTROPY;
-extern const VarType VAR_TYPE_POLICY_GRADIENT;
+extern const VarType VAR_TYPE_REINFORCE_LOSS;
 
 typedef struct {
     Var** vars;
@@ -109,7 +109,7 @@ Var* var_cross_entropy(
     mem_arena* arena, model_state* model,
     Var* p, Var* q, u32 flags
 );
-Var* var_policy_gradient(
+Var* var_reinforce_loss(
     mem_arena* arena, model_state* model,
     Var* probs, Var* rt, u32 flags
 );

@@ -12,8 +12,8 @@ static void var_matmul_forward(Var* var);
 static void var_matmul_backward(Var* var);
 static void var_cross_entropy_forward(Var* var);
 static void var_cross_entropy_backward(Var* var);
-static void var_policy_gradient_forward(Var* var);
-static void var_policy_gradient_backward(Var* var);
+static void var_reinforce_forward(Var* var);
+static void var_reinforce_backward(Var* var);
 static b32 var_shape_same(Var* a, Var* b, u32* rows, u32* cols);
 static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols);
 
@@ -70,12 +70,12 @@ const VarType VAR_TYPE_CROSS_ENTROPY = {
     .backward = var_cross_entropy_backward,
 };
 
-const VarType VAR_TYPE_POLICY_GRADIENT = {
-    .op = VAR_OP_POLICY_GRADIENT,
+const VarType VAR_TYPE_REINFORCE_LOSS = {
+    .op = VAR_OP_REINFORCE_LOSS,
     .num_inputs = 2,
     .shape = var_shape_same,
-    .forward = var_policy_gradient_forward,
-    .backward = var_policy_gradient_backward
+    .forward = var_reinforce_forward,
+    .backward = var_reinforce_backward
 };
 
 Var* var_create(
@@ -125,6 +125,8 @@ static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols) {
 
     return true;
 }
+
+
 
 Var* create_node(
     mem_arena* arena, model_state* model,
@@ -200,11 +202,11 @@ Var* var_cross_entropy(
     return create_node(arena, model, &VAR_TYPE_CROSS_ENTROPY, p, q, flags);
 }
 
-Var* var_policy_gradient(
+Var* var_reinforce_loss(
     mem_arena* arena, model_state* model,
     Var* probs, Var* rt, u32 flags
 ) {
-    return create_node(arena, model, &VAR_TYPE_POLICY_GRADIENT, probs, rt, flags);
+    return create_node(arena, model, &VAR_TYPE_REINFORCE_LOSS, probs, rt, flags);
 }
 
 
@@ -409,16 +411,16 @@ static void var_cross_entropy_backward(Var* var) {
     );
 }
 
-static void var_policy_gradient_forward(Var* var) {
+static void var_reinforce_forward(Var* var) {
     policy_gradient(var->val, var->inputs[0]->val, var->inputs[1]->val);
 }
 
-static void var_policy_gradient_backward(Var* var) {
+static void var_reinforce_backward(Var* var) {
     Var* probs = var->inputs[0];
     Var* rt = var->inputs[1];
 
     if (var_requires_grad(probs)) {
-        policy_gradient_add_grad(probs->grad, probs->val, rt->val, var->grad);
+        reinforce_add_grad(probs->grad, probs->val, rt->val, var->grad);
     }
 }
 
