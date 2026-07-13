@@ -88,13 +88,8 @@ SnakeENV* create_env(
 
 
 b32 game_over(SnakeENV* env) {
-    if (env->x > env->cols || env->x < 0) {
-        return true;
-    }
-    else if(env->y > env->rows || env->y < 0) {
-        return true;
-    }
-    return false;
+    return env->x < 0 || env->x >= (i32)env->cols ||
+           env->y < 0 || env->y >= (i32)env->rows;
 }
 
 
