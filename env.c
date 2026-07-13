@@ -18,6 +18,7 @@ typedef enum  {
     RIGHT = 1,
     UP = 2,
     DOWN = 3,
+    NONE = 4
 } ACTION;
 
 typedef struct {
@@ -115,11 +116,12 @@ void reset_state(SnakeENV* env) {
     env->steps = 0;
 }
 
-void take_action(SnakeENV* env, u32 action) {
-    if (action == env->pov) { // 
-        return;
+void take_action(SnakeENV* env, ACTION action) {
+    if (action == NONE) {
+        action = env->pov;
     }
-    else if(action == LEFT) {
+
+    if(action == LEFT) {
         env->snake.x -= 1;
     }
     else if(action == RIGHT) {
@@ -131,6 +133,11 @@ void take_action(SnakeENV* env, u32 action) {
     else if(action == DOWN) {
         env->snake.y -= 1;
     }
+    else {
+        return;
+    }
+
+    env->pov = action;
 }
 
 ACTION sample_action(matrix* probs) {
@@ -202,6 +209,8 @@ void train(
 
                 take_action(env, action);
 
+
+                printf("X: %i\n", env->snake.x);
                 f32 reward = get_reward(env);
                 env->score += reward;
                 b32 done = game_over(env);
@@ -247,6 +256,7 @@ void train(
                     }
                     if(t==(traj.len-1)) {
                         printf("Return: %f\n", return_);
+                        
                         rt = return_;
                     }
                     
