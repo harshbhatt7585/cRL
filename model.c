@@ -46,10 +46,10 @@ void create_actor_model(
     Var* output = var_softmax(arena, model, z2_b);
     model->output = output;
 
-    Var* returns = var_create(arena, model, 5, 1, VAR_FLAG_NONE);
-    model->desired_output = returns;
+    Var* advantage = var_create(arena, model, 5, 1, VAR_FLAG_NONE);
+    model->advantage = advantage;
 
-    Var* cost = var_reinforce_loss(arena, model, output, returns);
+    Var* cost = var_reinforce_loss(arena, model, output, advantage);
     model->cost = cost;
 }
 

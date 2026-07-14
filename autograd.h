@@ -54,7 +54,7 @@ typedef struct {
 
     Var* input;
     Var* output;
-    Var* desired_output;
+    Var* advantage;
     Var* cost;
 
     Graph forward_graph;

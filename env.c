@@ -330,10 +330,10 @@ void train(
                     env->grid_size
                 );
 
-                clear(model->desired_output->val);
+                clear(model->advantage->val);
                 f32 advantage =
                     (traj->returns[t] - return_mean) / (return_std + 1e-8f);
-                model->desired_output->val->data[traj->actions[t]] = advantage;
+                model->advantage->val->data[traj->actions[t]] = advantage;
 
                 forward_pass(&model->cost_graph);
                 backward_pass(&model->cost_graph);
