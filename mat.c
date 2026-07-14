@@ -11,23 +11,6 @@ matrix* create_matrix(mem_arena* arena, u32 rows, u32 cols) {
     return mat;
 }
 
-matrix* load(mem_arena* arena, u32 rows, u32 cols, const char* filename) {
-    matrix* mat = create_matrix(arena, rows, cols);
-
-    FILE* f = fopen(filename, "rb");
-
-    fseek(f, 0, SEEK_END);
-    u64 size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    size = MIN(size, sizeof(f32) * rows * cols);
-
-    fread(mat->data, 1, size, f);
-
-    fclose(f);
-
-    return mat;
-}
 
 b32 copy(matrix* dst, matrix* src) {
     if (dst->rows != src->rows || dst->cols != src->cols) {
@@ -68,29 +51,6 @@ void scale(matrix* mat, f32 scale) {
     }
 }
 
-f32 sum(matrix* mat) {
-    u64 size = (u64)mat->rows * mat->cols;
-
-    f32 sum = 0.0f;
-    for (u64 i = 0; i < size; i++) {
-        sum += mat->data[i];
-    }
-
-    return sum;
-}
-
-u64 argmax(matrix* mat) {
-    u64 size = (u64)mat->rows * mat->cols;
-
-    u64 max_i = 0;
-    for (u64 i = 0; i < size; i++) {
-        if (mat->data[i] > mat->data[max_i]) {
-            max_i = i;
-        }
-    }
-
-    return max_i;
-}
 
 b32 add(matrix* out, const matrix* a, const matrix* b) {
     if (a->rows != b->rows || a->cols != b->cols) {
