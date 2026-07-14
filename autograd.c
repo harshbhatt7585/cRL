@@ -87,10 +87,10 @@ Var* var_create(
     out->index = model->num_vars++;
     out->flags = flags;
     out->type = &VAR_TYPE_CREATE;
-    out->val = create(arena, rows, cols);
+    out->val = create_matrix(arena, rows, cols);
 
     if (flags & VAR_FLAG_REQUIRES_GRAD) {
-        out->grad = create(arena, rows, cols);
+        out->grad = create_matrix(arena, rows, cols);
     }
 
     return out;

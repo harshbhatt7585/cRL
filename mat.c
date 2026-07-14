@@ -1,7 +1,7 @@
 #include "mat.h"
 #include "prng.h"
 
-matrix* create(mem_arena* arena, u32 rows, u32 cols) {
+matrix* create_matrix(mem_arena* arena, u32 rows, u32 cols) {
     matrix* mat = PUSH_STRUCT(arena, matrix);
 
     mat->rows = rows;
@@ -12,7 +12,7 @@ matrix* create(mem_arena* arena, u32 rows, u32 cols) {
 }
 
 matrix* load(mem_arena* arena, u32 rows, u32 cols, const char* filename) {
-    matrix* mat = create(arena, rows, cols);
+    matrix* mat = create_matrix(arena, rows, cols);
 
     FILE* f = fopen(filename, "rb");
 
@@ -310,7 +310,7 @@ b32 softmax_add_grad(
     mem_arena_temp scratch = arena_scratch_get(NULL, 0);
 
     u32 size = MAX(softmax_out->rows, softmax_out->cols);
-    matrix* jacobian = create(scratch.arena, size, size);
+    matrix* jacobian = create_matrix(scratch.arena, size, size);
 
     for (u32 i = 0; i < size; i++) {
         for (u32 j = 0; j < size; j++) {

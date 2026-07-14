@@ -42,8 +42,8 @@ int main(void) {
 
     matrix* train_images = load(perm_arena, 60000, 784, "train_images.mat");
     matrix* test_images = load(perm_arena, 10000, 784, "test_images.mat");
-    matrix* train_labels = create(perm_arena, 60000, 10);
-    matrix* test_labels = create(perm_arena, 10000, 10);
+    matrix* train_labels = create_matrix(perm_arena, 60000, 10);
+    matrix* test_labels = create_matrix(perm_arena, 10000, 10);
 
     {
         matrix* train_labels_file = load(perm_arena, 60000, 1, "train_labels.mat");

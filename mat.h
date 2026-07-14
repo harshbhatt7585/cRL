@@ -10,7 +10,7 @@ typedef struct {
     f32* data;
 } matrix;
 
-matrix* create(mem_arena* arena, u32 rows, u32 cols);
+matrix* create_matrix(mem_arena* arena, u32 rows, u32 cols);
 matrix* load(mem_arena* arena, u32 rows, u32 cols, const char* filename);
 b32 copy(matrix* dst, matrix* src);
 void clear(matrix* mat);
