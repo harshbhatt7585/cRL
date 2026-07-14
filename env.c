@@ -377,24 +377,7 @@ int main(void) {
 
 
     SnakeENV* env = create_env(36);
-
-    // for(u32 i=0; i< 100; i++) {
-    //     take_action(env, randn(4));
-    //     f32 reward = get_reward(env);
-    //     env->score += reward;
-    //     b32 is_game_over = game_over(env);
-
-
-    //     printf("Env %d\n",env->snake.x);
-    //     printf("Env %d\n",env->snake.y);
-    //     printf("Env %f\n",env->score);
-    //     printf("Env %f\n",reward);
-    //     printf("GAME OVER: %u\n", is_game_over);
-
-    //     if (is_game_over) {
-    //         break;
-    //     }
-    // }
+    
     train(model, env, arena);
 
     return 0;
