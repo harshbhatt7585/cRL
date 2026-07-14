@@ -15,9 +15,6 @@ static void var_reinforce_backward(Var* var);
 static b32 var_shape_same(Var* a, Var* b, u32* rows, u32* cols);
 static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols);
 
-static const VarType VAR_TYPE_CREATE = {
-    .num_inputs = 0,
-};
 
 const VarType VAR_TYPE_RELU = {
     .num_inputs = 1,
