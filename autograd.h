@@ -11,19 +11,6 @@ typedef enum {
     VAR_FLAG_PARAMETER      = (1 << 1),
 } VarFlags;
 
-typedef enum {
-    VAR_OP_NULL = 0,
-    VAR_OP_CREATE,
-
-    VAR_OP_RELU,
-    VAR_OP_SOFTMAX,
-    VAR_OP_ADD,
-    VAR_OP_SUB,
-    VAR_OP_MATMUL,
-    VAR_OP_CROSS_ENTROPY,
-    VAR_OP_REINFORCE_LOSS,
-} VarOp;
-
 #define VAR_MAX_INPUTS 2
 
 typedef struct Var Var;
@@ -32,7 +19,6 @@ typedef void VarFunc(Var* var);
 typedef b32 VarShapeFunc(Var* a, Var* b, u32* rows, u32* cols);
 
 struct VarType {
-    VarOp op;
     u32 num_inputs;
     VarShapeFunc* shape;
     VarFunc* forward;

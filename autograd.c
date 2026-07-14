@@ -18,12 +18,10 @@ static b32 var_shape_same(Var* a, Var* b, u32* rows, u32* cols);
 static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols);
 
 static const VarType VAR_TYPE_CREATE = {
-    .op = VAR_OP_CREATE,
     .num_inputs = 0,
 };
 
 const VarType VAR_TYPE_RELU = {
-    .op = VAR_OP_RELU,
     .num_inputs = 1,
     .shape = var_shape_same,
     .forward = var_relu_forward,
@@ -31,7 +29,6 @@ const VarType VAR_TYPE_RELU = {
 };
 
 const VarType VAR_TYPE_SOFTMAX = {
-    .op = VAR_OP_SOFTMAX,
     .num_inputs = 1,
     .shape = var_shape_same,
     .forward = var_softmax_forward,
@@ -39,7 +36,6 @@ const VarType VAR_TYPE_SOFTMAX = {
 };
 
 const VarType VAR_TYPE_ADD = {
-    .op = VAR_OP_ADD,
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_add_forward,
@@ -47,7 +43,6 @@ const VarType VAR_TYPE_ADD = {
 };
 
 const VarType VAR_TYPE_SUB = {
-    .op = VAR_OP_SUB,
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_sub_forward,
@@ -55,7 +50,6 @@ const VarType VAR_TYPE_SUB = {
 };
 
 const VarType VAR_TYPE_MATMUL = {
-    .op = VAR_OP_MATMUL,
     .num_inputs = 2,
     .shape = var_shape_matmul,
     .forward = var_matmul_forward,
@@ -63,7 +57,6 @@ const VarType VAR_TYPE_MATMUL = {
 };
 
 const VarType VAR_TYPE_CROSS_ENTROPY = {
-    .op = VAR_OP_CROSS_ENTROPY,
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_cross_entropy_forward,
@@ -71,7 +64,6 @@ const VarType VAR_TYPE_CROSS_ENTROPY = {
 };
 
 const VarType VAR_TYPE_REINFORCE_LOSS = {
-    .op = VAR_OP_REINFORCE_LOSS,
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_reinforce_forward,
