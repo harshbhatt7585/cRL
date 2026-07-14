@@ -128,14 +128,15 @@ static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols) {
 
 
 
-Var* create_node(
+static Var* create_node(
     mem_arena* arena, model_state* model,
-    const VarType* type, Var* a, Var* b, u32 flags
+    const VarType* type, Var* a, Var* b
 ) {
     if (type == NULL || type->shape == NULL) {
         return NULL;
     }
 
+    u32 flags = VAR_FLAG_NONE;
     if (
         (a != NULL && (a->flags & VAR_FLAG_REQUIRES_GRAD)) ||
         (b != NULL && (b->flags & VAR_FLAG_REQUIRES_GRAD))
@@ -162,51 +163,51 @@ Var* create_node(
 
 Var* var_relu(
     mem_arena* arena, model_state* model,
-    Var* input, u32 flags
+    Var* input
 ) {
-    return create_node(arena, model, &VAR_TYPE_RELU, input, NULL, flags);
+    return create_node(arena, model, &VAR_TYPE_RELU, input, NULL);
 }
 
 Var* var_softmax(
     mem_arena* arena, model_state* model,
-    Var* input, u32 flags
+    Var* input
 ) {
-    return create_node(arena, model, &VAR_TYPE_SOFTMAX, input, NULL, flags);
+    return create_node(arena, model, &VAR_TYPE_SOFTMAX, input, NULL);
 }
 
 Var* var_add(
     mem_arena* arena, model_state* model,
-    Var* a, Var* b, u32 flags
+    Var* a, Var* b
 ) {
-    return create_node(arena, model, &VAR_TYPE_ADD, a, b, flags);
+    return create_node(arena, model, &VAR_TYPE_ADD, a, b);
 }
 
 Var* var_sub(
     mem_arena* arena, model_state* model,
-    Var* a, Var* b, u32 flags
+    Var* a, Var* b
 ) {
-    return create_node(arena, model, &VAR_TYPE_SUB, a, b, flags);
+    return create_node(arena, model, &VAR_TYPE_SUB, a, b);
 }
 
 Var* var_matmul(
     mem_arena* arena, model_state* model,
-    Var* a, Var* b, u32 flags
+    Var* a, Var* b
 ) {
-    return create_node(arena, model, &VAR_TYPE_MATMUL, a, b, flags);
+    return create_node(arena, model, &VAR_TYPE_MATMUL, a, b);
 }
 
 Var* var_cross_entropy(
     mem_arena* arena, model_state* model,
-    Var* p, Var* q, u32 flags
+    Var* p, Var* q
 ) {
-    return create_node(arena, model, &VAR_TYPE_CROSS_ENTROPY, p, q, flags);
+    return create_node(arena, model, &VAR_TYPE_CROSS_ENTROPY, p, q);
 }
 
 Var* var_reinforce_loss(
     mem_arena* arena, model_state* model,
-    Var* probs, Var* rt, u32 flags
+    Var* probs, Var* rt
 ) {
-    return create_node(arena, model, &VAR_TYPE_REINFORCE_LOSS, probs, rt, flags);
+    return create_node(arena, model, &VAR_TYPE_REINFORCE_LOSS, probs, rt);
 }
 
 

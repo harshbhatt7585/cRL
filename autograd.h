@@ -79,39 +79,35 @@ Var* var_create(
     mem_arena* arena, model_state* model,
     u32 rows, u32 cols, u32 flags
 );
-Var* create_node(
-    mem_arena* arena, model_state* model,
-    const VarType* type, Var* a, Var* b, u32 flags
-);
 
 Var* var_relu(
     mem_arena* arena, model_state* model,
-    Var* input, u32 flags
+    Var* input
 );
 Var* var_softmax(
     mem_arena* arena, model_state* model,
-    Var* input, u32 flags
+    Var* input
 );
 
 Var* var_add(
     mem_arena* arena, model_state* model,
-    Var* a, Var* b, u32 flags
+    Var* a, Var* b
 );
 Var* var_sub(
     mem_arena* arena, model_state* model,
-    Var* a, Var* b, u32 flags
+    Var* a, Var* b
 );
 Var* var_matmul(
     mem_arena* arena, model_state* model,
-    Var* a, Var* b, u32 flags
+    Var* a, Var* b
 );
 Var* var_cross_entropy(
     mem_arena* arena, model_state* model,
-    Var* p, Var* q, u32 flags
+    Var* p, Var* q
 );
 Var* var_reinforce_loss(
     mem_arena* arena, model_state* model,
-    Var* probs, Var* rt, u32 flags
+    Var* probs, Var* rt
 );
 
 

@@ -32,24 +32,24 @@ void create_actor_model(
     fill_rand(W1->val, -bound1, bound1);
     fill_rand(W2->val, -bound2, bound2);
 
-    Var* z0_a = var_matmul(arena, model, W0, input, 0);
-    Var* z0_b = var_add(arena, model, z0_a, b0, 0);
-    Var* a0 = var_relu(arena, model, z0_b, 0);
+    Var* z0_a = var_matmul(arena, model, W0, input);
+    Var* z0_b = var_add(arena, model, z0_a, b0);
+    Var* a0 = var_relu(arena, model, z0_b);
 
-    Var* z1_a = var_matmul(arena, model, W1, a0, 0);
-    Var* z1_b = var_add(arena, model, z1_a, b1, 0);
-    Var* a1 = var_relu(arena, model, z1_b, 0);
+    Var* z1_a = var_matmul(arena, model, W1, a0);
+    Var* z1_b = var_add(arena, model, z1_a, b1);
+    Var* a1 = var_relu(arena, model, z1_b);
 
-    Var* z2_a = var_matmul(arena, model, W2, a1, 0);
-    Var* z2_b = var_add(arena, model, z2_a, b2, 0);
+    Var* z2_a = var_matmul(arena, model, W2, a1);
+    Var* z2_b = var_add(arena, model, z2_a, b2);
 
-    Var* output = var_softmax(arena, model, z2_b, VAR_FLAG_NONE);
+    Var* output = var_softmax(arena, model, z2_b);
     model->output = output;
 
     Var* returns = var_create(arena, model, 5, 1, VAR_FLAG_NONE);
     model->desired_output = returns;
 
-    Var* cost = var_reinforce_loss(arena, model, output, returns, VAR_FLAG_NONE);
+    Var* cost = var_reinforce_loss(arena, model, output, returns);
     model->cost = cost;
 }
 
