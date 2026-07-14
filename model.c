@@ -9,7 +9,7 @@
 #include "mat.c"
 #include "autograd.c"
 
-void create_actor_critic_model(
+void create_actor_model(
     mem_arena* arena, model_state* model
 ) {
     Var* input = var_create(arena, model, 76, 1, VAR_FLAG_NONE);
@@ -59,7 +59,7 @@ void create_actor_critic_model(
 
 //     model_state* model = PUSH_STRUCT(arena, model_state);
 
-//     create_actor_critic_model(arena, model);
+//     create_actor_model(arena, model);
 
 //     arena_destroy(arena);
 
