@@ -10,8 +10,6 @@ static void var_sub_forward(Var* var);
 static void var_sub_backward(Var* var);
 static void var_matmul_forward(Var* var);
 static void var_matmul_backward(Var* var);
-static void var_cross_entropy_forward(Var* var);
-static void var_cross_entropy_backward(Var* var);
 static void var_reinforce_forward(Var* var);
 static void var_reinforce_backward(Var* var);
 static b32 var_shape_same(Var* a, Var* b, u32* rows, u32* cols);
@@ -54,13 +52,6 @@ const VarType VAR_TYPE_MATMUL = {
     .shape = var_shape_matmul,
     .forward = var_matmul_forward,
     .backward = var_matmul_backward,
-};
-
-const VarType VAR_TYPE_CROSS_ENTROPY = {
-    .num_inputs = 2,
-    .shape = var_shape_same,
-    .forward = var_cross_entropy_forward,
-    .backward = var_cross_entropy_backward,
 };
 
 const VarType VAR_TYPE_REINFORCE_LOSS = {
@@ -186,13 +177,6 @@ Var* var_matmul(
     Var* a, Var* b
 ) {
     return create_node(arena, model, &VAR_TYPE_MATMUL, a, b);
-}
-
-Var* var_cross_entropy(
-    mem_arena* arena, model_state* model,
-    Var* p, Var* q
-) {
-    return create_node(arena, model, &VAR_TYPE_CROSS_ENTROPY, p, q);
 }
 
 Var* var_reinforce_loss(
@@ -398,21 +382,6 @@ static void var_matmul_backward(Var* var) {
     if (var_requires_grad(b)) {
         mul(b->grad, a->val, var->grad, 0, 1, 0);
     }
-}
-
-static void var_cross_entropy_forward(Var* var) {
-    cross_entropy(var->val, var->inputs[0]->val, var->inputs[1]->val);
-}
-
-static void var_cross_entropy_backward(Var* var) {
-    Var* p = var->inputs[0];
-    Var* q = var->inputs[1];
-
-    cross_entropy_add_grad(
-        var_requires_grad(p) ? p->grad : NULL,
-        var_requires_grad(q) ? q->grad : NULL,
-        p->val, q->val, var->grad
-    );
 }
 
 static void var_reinforce_forward(Var* var) {

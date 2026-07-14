@@ -195,19 +195,6 @@ b32 softmax(matrix* out, const matrix* in) {
     return true;
 }
 
-b32 cross_entropy(matrix* out, const matrix* p, const matrix* q) {
-    if (p->rows != q->rows || p->cols != q->cols) { return false; }
-    if (out->rows != p->rows || out->cols != p->cols) { return false; }
-
-    u64 size = (u64)out->rows * out->cols;
-    for (u64 i = 0; i < size; i++) {
-        out->data[i] = p->data[i] == 0.0f ?
-            0.0f : p->data[i] * -logf(q->data[i]);
-    }
-
-    return true;
-}
-
 
 b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt) {
 
@@ -278,37 +265,6 @@ b32 softmax_add_grad(
 
     for (u64 i = 0; i < size; i++) {
         out->data[i] += softmax_out->data[i] * (grad->data[i] - dot);
-    }
-
-    return true;
-}
-
-b32 cross_entropy_add_grad(
-    matrix* p_grad, matrix* q_grad,
-    const matrix* p, const matrix* q, const matrix* grad
-) {
-    if (p->rows != q->rows || p->cols != q->cols) { return false; }
-
-    u64 size = (u64)p->rows * p->cols;
-
-    if (p_grad != NULL) {
-        if (p_grad->rows != p->rows || p_grad->cols != p->cols) {
-            return false; 
-        }
-
-        for (u64 i = 0; i < size; i++) {
-            p_grad->data[i] += -logf(q->data[i]) * grad->data[i];
-        }
-    }
-
-    if (q_grad != NULL) {
-        if (q_grad->rows != q->rows || q_grad->cols != q->cols) {
-            return false; 
-        }
-
-        for (u64 i = 0; i < size; i++) {
-            q_grad->data[i] += -p->data[i] / q->data[i] * grad->data[i];
-        }
     }
 
     return true;
