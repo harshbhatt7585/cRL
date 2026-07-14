@@ -46,8 +46,10 @@ typedef struct {
 typedef struct {
     State states[EPISODE_LEN];
     State food_states[EPISODE_LEN];
+    ACTION povs[EPISODE_LEN];
     ACTION actions[EPISODE_LEN];
     f32 rewards[EPISODE_LEN];
+    f32 returns[EPISODE_LEN];
     State next_states[EPISODE_LEN];
     b32 dones[EPISODE_LEN];
 
@@ -100,10 +102,10 @@ b32 game_over(SnakeENV* env) {
 
 
 f32 get_reward(SnakeENV* env) {
-    f32 reward = -0.01f;
+    f32 reward = 0.0f;
 
     if (env->snake.x == env->food.x && env->snake.y == env->food.y) {
-        reward += 5.0f;
+        reward += 20.0f;
         env->foods_eaten++;
 
         State new_food;
@@ -130,8 +132,18 @@ f32 get_reward(SnakeENV* env) {
 }
 
 void reset_state(SnakeENV* env) {
-    env->snake = (State){ .x = 0, .y = 0 };
-    env->food = (State){ .x = 5, .y = 5 };
+    env->snake = (State){
+        .x = (i32)(env->cols / 2),
+        .y = (i32)(env->rows / 2),
+    };
+
+    do {
+        env->food = get_random_food_loc(env->cols, env->rows);
+    } while (
+        env->food.x == env->snake.x &&
+        env->food.y == env->snake.y
+    );
+
     env->score = 0.0f;
     env->foods_eaten = 0;
     env->pov = RIGHT;
@@ -181,6 +193,7 @@ void build_state_vector(
     matrix* in,
     State state,
     State food_state,
+    ACTION pov,
     u32 cols,
     u32 grid_size
 ) {
@@ -191,6 +204,7 @@ void build_state_vector(
 
     in->data[snake_i] = 1.0f;
     in->data[grid_size + food_i] = 1.0f;
+    in->data[2 * grid_size + (u32)pov] = 1.0f;
 }
 
 void train(
@@ -198,13 +212,17 @@ void train(
     SnakeENV* env,
     mem_arena* arena
 ) {
-    u32 EPOCHS = 512;
-    u32 batch_size = 32;
-    u32 rollout_size = 128;
+    (void)arena;
+
+    u32 EPOCHS = 2000;
+    u32 rollout_size = 64;
     u32 episode_len = 100;
+    f32 gamma = 0.99f;
+    f32 learning_rate = 0.05f;
     ReplayBuffer buffer = {0};
 
     for (u32 epoch=0; epoch < EPOCHS; epoch++) {
+        u32 foods_eaten = 0;
 
         for(u32 i = 0; i < rollout_size; i++) {
             reset_state(env);
@@ -216,11 +234,13 @@ void train(
             for(u32 t = 0; t < episode_len; t++) {
                 State state = env->snake;
                 State food_state = env->food;
+                ACTION pov = env->pov;
 
                 build_state_vector(
                     model->input->val,
                     state,
                     food_state,
+                    pov,
                     env->cols,
                     env->grid_size
                 );
@@ -239,6 +259,7 @@ void train(
 
                 traj->states[t] = state;
                 traj->food_states[t] = food_state;
+                traj->povs[t] = pov;
                 traj->actions[t] = action;
                 traj->rewards[t] = reward;
                 traj->next_states[t] = next_state;
@@ -249,7 +270,43 @@ void train(
                     break;
                 }
             }
+
+            foods_eaten += env->foods_eaten;
         }
+
+        buffer.count = rollout_size;
+
+        u32 sample_count = 0;
+        f32 average_return = 0.0f;
+        f32 return_sum = 0.0f;
+        f32 return_sq_sum = 0.0f;
+
+        // Compute reward-to-go statistics for a rollout-wide baseline.
+        for (u32 b = 0; b < buffer.count; b++) {
+            Trajactory* traj = &buffer.trajactories[b];
+            f32 G = 0.0f;
+
+            for (i32 t = (i32)traj->len - 1; t >= 0; t--) {
+                G = traj->rewards[t] + gamma * G;
+                traj->returns[t] = G;
+                return_sum += G;
+                return_sq_sum += G * G;
+                sample_count++;
+            }
+
+            average_return += traj->returns[0];
+            // printf("Returns %f\n", traj->returns[0]);  
+        }
+        
+        
+
+        
+
+
+        f32 return_mean = return_sum / (f32)sample_count;
+        f32 return_variance =
+            return_sq_sum / (f32)sample_count - return_mean * return_mean;
+        f32 return_std = sqrtf(MAX(return_variance, 0.0f));
 
         for (u32 i = 0; i < model->cost_graph.size; i++) {
             Var* cur = model->cost_graph.vars[i];
@@ -259,82 +316,56 @@ void train(
             }
         }
 
-        // Training Phase
-        // Sample batch from buffer
-        u64 start_idx = randn( (u64)(BUFFER_SIZE - batch_size));
-        u64 end_idx = start_idx + batch_size;
-    
-            for(u64 b=start_idx; b < end_idx; b++) {
-                Trajactory traj = buffer.trajactories[b];
+        // Training phase: use each trajectory from the current policy once.
+        for (u32 b = 0; b < buffer.count; b++) {
+            Trajactory* traj = &buffer.trajactories[b];
 
-                if (traj.len == 0) {
+            for (u32 t = 0; t < traj->len; t++) {
+                build_state_vector(
+                    model->input->val,
+                    traj->states[t],
+                    traj->food_states[t],
+                    traj->povs[t],
+                    env->cols,
+                    env->grid_size
+                );
+
+                clear(model->desired_output->val);
+                f32 advantage =
+                    (traj->returns[t] - return_mean) / (return_std + 1e-8f);
+                model->desired_output->val->data[traj->actions[t]] = advantage;
+
+                forward_pass(&model->cost_graph);
+                backward_pass(&model->cost_graph);
+            }
+        }
+
+        if (sample_count > 0) {
+            f32 gradient_scale = learning_rate / (f32)sample_count;
+
+            for (u32 i = 0; i < model->cost_graph.size; i++) {
+                Var* cur = model->cost_graph.vars[i];
+
+                if ((cur->flags & VAR_FLAG_PARAMETER) == 0) {
                     continue;
                 }
 
-                f32 returns[EPISODE_LEN];
-                f32 G = 0.0f;
-                f32 gamma = 0.99f;
-
-                for (i32 t = (i32)traj.len - 1; t >= 0; t--) {
-                    G = traj.rewards[t] + gamma * G;
-                    returns[t] = G;
-                }
-
-                printf("Episode return: %f\n", returns[0]);
-
-                matrix* policy_loss = create(arena, traj.len, 1); 
-
-                for (u32 t=0; t < traj.len; t++) {
-                    State state_ = traj.states[t];
-                    State food_state_ = traj.food_states[t];
-                    ACTION action_ = traj.actions[t];
-                    f32 return_ = returns[t];
-                    
-                    build_state_vector(
-                        model->input->val,
-                        state_,
-                        food_state_,
-                        env->cols,
-                        env->grid_size
-                    );
-
-                    clear(model->desired_output->val);
-                    model->desired_output->val->data[action_] = return_;
-                    
-                    forward_pass(&model->cost_graph);
-                    backward_pass(&model->cost_graph);
-                    
-    
-                    f32 p = MAX(model->output->val->data[action_], 1e-8f);
-                    policy_loss->data[t] = -logf(p) * return_;
-
-                }
-                // printf("Loss: %f\n", sum(policy_loss) / batch_size);
-
-                for(u32 i=0; i< model->cost_graph.size; i++) {
-                    Var* cur = model->cost_graph.vars[i];
-
-
-                    if ((cur->flags & VAR_FLAG_PARAMETER) != VAR_FLAG_PARAMETER) {
-                        continue;
-                    }
-                    scale(
-                        cur->grad,
-                        0.05f / batch_size 
-                    );
-                    sub(cur->val, cur->val, cur->grad);
-                  }
-
+                scale(cur->grad, gradient_scale);
+                sub(cur->val, cur->val, cur->grad);
+            }
         }
 
+        printf(
+            "Epoch %u | Average return: %.3f | Foods: %u | Samples: %u | Return std: %.3f\n",
+            epoch, average_return / (f32)buffer.count,
+            foods_eaten, sample_count, return_std
+        );
+
     }
-
-    
-
 }
 
 
-int main() {
+int main(void) {
 
     mem_arena* arena = arena_create(GiB(1));
 
