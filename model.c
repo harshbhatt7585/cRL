@@ -12,10 +12,10 @@
 void create_actor_critic_model(
     mem_arena* arena, model_state* model
 ) {
-    Var* input = var_create(arena, model, 72, 1, VAR_FLAG_NONE);
+    Var* input = var_create(arena, model, 76, 1, VAR_FLAG_NONE);
     model->input = input;
 
-    Var* W0 = var_create(arena, model, 128, 72, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
+    Var* W0 = var_create(arena, model, 128, 76, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
     Var* b0 = var_create(arena, model, 128, 1, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
 
     Var* W1 = var_create(arena, model, 128, 128, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
@@ -24,7 +24,7 @@ void create_actor_critic_model(
     Var* W2 = var_create(arena, model, 5, 128, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
     Var* b2 = var_create(arena, model, 5, 1, VAR_FLAG_PARAMETER | VAR_FLAG_REQUIRES_GRAD);
 
-    f32 bound0 = sqrtf(6.0f / (72 + 128));
+    f32 bound0 = sqrtf(6.0f / (76 + 128));
     f32 bound1 = sqrtf(6.0f / (128 + 128));
     f32 bound2 = sqrtf(6.0f / (128 + 5));
   
@@ -34,9 +34,13 @@ void create_actor_critic_model(
 
     Var* z0_a = var_matmul(arena, model, W0, input, 0);
     Var* z0_b = var_add(arena, model, z0_a, b0, 0);
-    Var* z1_a = var_matmul(arena, model, W1, z0_b, 0);
+    Var* a0 = var_relu(arena, model, z0_b, 0);
+
+    Var* z1_a = var_matmul(arena, model, W1, a0, 0);
     Var* z1_b = var_add(arena, model, z1_a, b1, 0);
-    Var* z2_a = var_matmul(arena, model, W2, z1_b, 0);
+    Var* a1 = var_relu(arena, model, z1_b, 0);
+
+    Var* z2_a = var_matmul(arena, model, W2, a1, 0);
     Var* z2_b = var_add(arena, model, z2_a, b2, 0);
 
     Var* output = var_softmax(arena, model, z2_b, VAR_FLAG_NONE);
