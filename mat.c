@@ -105,7 +105,7 @@ b32 add(matrix* out, const matrix* a, const matrix* b) {
         out->data[i] = a->data[i] + b->data[i];
     }
 
-    return false;
+    return true;
 }
 
 b32 sub(matrix* out, const matrix* a, const matrix* b) {
@@ -121,7 +121,7 @@ b32 sub(matrix* out, const matrix* a, const matrix* b) {
         out->data[i] = a->data[i] - b->data[i];
     }
 
-    return false;
+    return true;
 }
 
 void _mat_mul_nn(matrix* out, const matrix* a, const matrix* b) {
@@ -190,10 +190,10 @@ b32 mul(
 
     u32 transpose = (transpose_a << 1) | transpose_b;
     switch (transpose) {
-        case 0b00: { _mat_mul_nn(out, a, b); } break;
-        case 0b01: { _mat_mul_nt(out, a, b); } break;
-        case 0b10: { _mat_mul_tn(out, a, b); } break;
-        case 0b11: { _mat_mul_tt(out, a, b); } break;
+        case 0: { _mat_mul_nn(out, a, b); } break;
+        case 1: { _mat_mul_nt(out, a, b); } break;
+        case 2: { _mat_mul_tn(out, a, b); } break;
+        case 3: { _mat_mul_tt(out, a, b); } break;
     }
 
     return true;
@@ -219,9 +219,14 @@ b32 softmax(matrix* out, const matrix* in) {
 
     u64 size = (u64)out->rows * out->cols;
 
+    f32 max_value = in->data[0];
+    for (u64 i = 1; i < size; i++) {
+        max_value = MAX(max_value, in->data[i]);
+    }
+
     f32 sum = 0.0f;
     for (u64 i = 0; i < size; i++) {
-        out->data[i] = expf(in->data[i]);
+        out->data[i] = expf(in->data[i] - max_value);
         sum += out->data[i];
     }
 
