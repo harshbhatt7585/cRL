@@ -206,14 +206,24 @@ Var* var_reinforce_loss(
 Graph build_graph(
     mem_arena* arena, model_state* model, Var* out_var
 ) {
-    mem_arena_temp scratch = arena_scratch_get(&arena, 1);
+    Graph graph = { 0 };
+    if (arena == NULL || model == NULL || out_var == NULL || model->num_vars == 0) {
+        return graph;
+    }
 
-    b8* visited = PUSH_ARRAY(scratch.arena, b8, model->num_vars);
+    b8* visited = calloc(model->num_vars, sizeof(*visited));
+    Var** stack = malloc(sizeof(*stack) * model->num_vars);
+    Var** out = malloc(sizeof(*out) * model->num_vars);
+
+    if (visited == NULL || stack == NULL || out == NULL) {
+        free(visited);
+        free(stack);
+        free(out);
+        return graph;
+    }
 
     u32 stack_size = 0;
     u32 out_size = 0;
-    Var** stack = PUSH_ARRAY(scratch.arena, Var*, model->num_vars);
-    Var** out = PUSH_ARRAY(scratch.arena, Var*, model->num_vars);
 
     stack[stack_size++] = out_var;
 
@@ -258,14 +268,15 @@ Graph build_graph(
         }
     }
 
-    Graph graph = {
-        .size = out_size,
-        .vars = PUSH_ARRAY_NZ(arena, Var*, out_size)
-    };
+    graph.vars = PUSH_ARRAY_UNINIT(arena, Var*, out_size);
+    if (graph.vars != NULL) {
+        graph.size = out_size;
+        memcpy(graph.vars, out, sizeof(*out) * out_size);
+    }
 
-    memcpy(graph.vars, out, sizeof(Var*) * out_size);
-
-    arena_scratch_release(scratch);
+    free(visited);
+    free(stack);
+    free(out);
 
     return graph;
 }

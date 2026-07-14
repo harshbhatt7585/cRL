@@ -263,25 +263,22 @@ b32 relu_add_grad(matrix* out, const matrix* in, const matrix* grad) {
 b32 softmax_add_grad(
     matrix* out, const matrix* softmax_out, const matrix* grad
 ) {
-    if (softmax_out->rows != 1 && softmax_out->cols != 1) {
+    if (out->rows != softmax_out->rows || out->cols != softmax_out->cols) {
+        return false;
+    }
+    if (grad->rows != softmax_out->rows || grad->cols != softmax_out->cols) {
         return false;
     }
 
-    mem_arena_temp scratch = arena_scratch_get(NULL, 0);
-
-    u32 size = MAX(softmax_out->rows, softmax_out->cols);
-    matrix* jacobian = create_matrix(scratch.arena, size, size);
-
-    for (u32 i = 0; i < size; i++) {
-        for (u32 j = 0; j < size; j++) {
-            jacobian->data[j + i * size] =
-                softmax_out->data[i] * ((i == j) - softmax_out->data[j]);
-        }
+    u64 size = (u64)softmax_out->rows * softmax_out->cols;
+    f32 dot = 0.0f;
+    for (u64 i = 0; i < size; i++) {
+        dot += grad->data[i] * softmax_out->data[i];
     }
 
-    mul(out, jacobian, grad, 0, 0, 0);
-
-    arena_scratch_release(scratch);
+    for (u64 i = 0; i < size; i++) {
+        out->data[i] += softmax_out->data[i] * (grad->data[i] - dot);
+    }
 
     return true;
 }
