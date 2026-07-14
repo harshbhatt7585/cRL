@@ -41,7 +41,6 @@ extern const VarType VAR_TYPE_SOFTMAX;
 extern const VarType VAR_TYPE_ADD;
 extern const VarType VAR_TYPE_SUB;
 extern const VarType VAR_TYPE_MATMUL;
-extern const VarType VAR_TYPE_CROSS_ENTROPY;
 extern const VarType VAR_TYPE_REINFORCE_LOSS;
 
 typedef struct {
@@ -87,10 +86,7 @@ Var* var_matmul(
     mem_arena* arena, model_state* model,
     Var* a, Var* b
 );
-Var* var_cross_entropy(
-    mem_arena* arena, model_state* model,
-    Var* p, Var* q
-);
+
 Var* var_reinforce_loss(
     mem_arena* arena, model_state* model,
     Var* probs, Var* rt
