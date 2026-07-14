@@ -66,7 +66,7 @@ Var* var_create(
 
     out->index = model->num_vars++;
     out->flags = flags;
-    out->type = &VAR_TYPE_CREATE;
+    out->type = NULL;
     out->val = create_matrix(arena, rows, cols);
 
     if (flags & VAR_FLAG_REQUIRES_GRAD) {
@@ -382,7 +382,7 @@ static void var_matmul_backward(Var* var) {
 }
 
 static void var_reinforce_forward(Var* var) {
-    policy_gradient(var->val, var->inputs[0]->val, var->inputs[1]->val);
+    reinforce_loss(var->val, var->inputs[0]->val, var->inputs[1]->val);
 }
 
 static void var_reinforce_backward(Var* var) {

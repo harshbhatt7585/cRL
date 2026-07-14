@@ -28,7 +28,7 @@ b32 mul(
 b32 relu(matrix* out, const matrix* in);
 b32 softmax(matrix* out, const matrix* in);
 b32 cross_entropy(matrix* out, const matrix* p, const matrix* q);
-b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt);
+b32 reinforce_loss(matrix* out, const matrix* probs, const matrix* advantages);
 b32 reinforce_add_grad(
     matrix* prob_grads,
     const matrix* probs,

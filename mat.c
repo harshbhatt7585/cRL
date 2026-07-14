@@ -196,16 +196,24 @@ b32 softmax(matrix* out, const matrix* in) {
 }
 
 
-b32 policy_gradient(matrix* out, const matrix* probs, const matrix* rt) {
+b32 reinforce_loss(
+    matrix* out, const matrix* probs, const matrix* advantages
+) {
 
-    if(probs->rows != rt->rows || probs->cols != rt->cols) { return false;}
-    if(out->rows != rt->rows || out->cols != rt->cols) { return false; }
+    if (
+        probs->rows != advantages->rows ||
+        probs->cols != advantages->cols
+    ) { return false; }
+    if (
+        out->rows != advantages->rows ||
+        out->cols != advantages->cols
+    ) { return false; }
 
     u64 size = (u64)out->rows * out->cols;
 
     for (u64 i = 0; i < size; i++) {
         f32 p = MAX(probs->data[i], 1e-8f);
-        out->data[i] = -logf(p) * rt->data[i];
+        out->data[i] = -logf(p) * advantages->data[i];
     } 
     return true;
 }
