@@ -121,7 +121,7 @@ static Var* create_node(
         (a != NULL && (a->flags & VAR_FLAG_REQUIRES_GRAD)) ||
         (b != NULL && (b->flags & VAR_FLAG_REQUIRES_GRAD))
     ) {
-        flags |= VAR_FLAG_REQUIRES_GRAD;
+        flags = VAR_FLAG_REQUIRES_GRAD;
     }
 
     u32 rows = 0;
