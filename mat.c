@@ -11,17 +11,6 @@ matrix* create_matrix(mem_arena* arena, u32 rows, u32 cols) {
     return mat;
 }
 
-
-b32 copy(matrix* dst, matrix* src) {
-    if (dst->rows != src->rows || dst->cols != src->cols) {
-        return false;
-    }
-
-    memcpy(dst->data, src->data, sizeof(f32) * (u64)dst->rows * dst->cols);
-
-    return true;
-}
-
 void clear(matrix* mat) {
     memset(mat->data, 0, sizeof(f32) * (u64)mat->rows * mat->cols);
 }

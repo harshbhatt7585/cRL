@@ -9,10 +9,6 @@
 #include "autograd.h"
 #include "model.c"
 
-u32 randn(u32 range) {
-    return arc4random_uniform(range);
-}
-
 typedef enum  {
     LEFT = 0,
     RIGHT = 1,
@@ -372,12 +368,12 @@ int main(void) {
     model_state* model = PUSH_STRUCT(arena, model_state);
 
     create_actor_model(arena, model);
-    model->forward_graph = build_graph(arena, model, model->output);
-    model->cost_graph = build_graph(arena, model, model->cost);
+    model->forward_graph = build_graph3(arena, model, model->output);
+    model->cost_graph = build_graph3(arena, model, model->cost);
 
 
     SnakeENV* env = create_env(36);
-    
+
     train(model, env, arena);
 
     return 0;

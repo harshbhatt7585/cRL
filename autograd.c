@@ -256,7 +256,6 @@ Graph build_graph(
     }
 
 
-
     graph.vars = PUSH_ARRAY_UNINIT(arena, Var*, out_size);
     if (graph.vars != NULL) {
         graph.size = out_size;
@@ -269,6 +268,122 @@ Graph build_graph(
 
     return graph;
 }
+
+
+Graph build_graph2(mem_arena* arena, model_state* model, Var* out_var) {
+
+    Graph graph = { 0 };
+
+    b8* visited = calloc(model->num_vars, sizeof(*visited));
+    Var** stack = malloc(sizeof(*stack) * model->num_vars);
+    Var** out = malloc(sizeof(*out) * model->num_vars); 
+
+    u32 stack_size = 0;
+    u32 out_size = 0;
+    
+    stack[stack_size++] = out_var;
+
+    while (stack_size > 0) {
+
+        Var* cur = stack[--stack_size];
+
+        if(visited[cur->index]) {
+            out[out_size++] = cur;
+            continue;
+        }
+
+        visited[cur->index] = true;
+        stack[stack_size++] = cur;
+
+        u32 num_inputs = cur->type != NULL ? cur->type->num_inputs : 0;
+        for(u32 i=0; i < num_inputs; i++) {
+
+            Var* input = cur->inputs[i];
+
+            for(u32 j=0; j< stack_size; j++) {
+                if(stack[j] == input) {
+                    for(u32 k=j; j< stack_size-1; k++) {
+                        stack[k] = stack[k+1];
+                    } 
+                    stack_size--;
+                }
+            }
+
+            stack[stack_size++] = input;
+        }
+    }
+
+    graph.vars = PUSH_ARRAY_UNINIT(arena, Var*, out_size);
+    if(graph.vars != NULL) {
+        graph.size = out_size;
+        memcpy(graph.vars, out, sizeof(*out)*out_size);
+    }
+
+    free(visited);
+    free(stack);
+    free(out);
+
+    return graph;
+
+}
+
+
+Graph build_graph3(mem_arena* arena , model_state* model, Var* out_var) {
+
+    Graph graph = { 0 };
+
+    b8* visited = calloc(model->num_vars, sizeof(*visited));
+    Var** stack = malloc(sizeof(*stack) * model->num_vars);
+    Var** out = malloc(sizeof(*out) * model->num_vars);
+
+    u32 stack_size = 0;
+    u32 out_size = 0;
+
+    stack[stack_size++] = out_var;
+
+    while (stack_size > 0) {
+        Var* cur = stack[--stack_size];
+
+        if(visited[cur->index]) {
+            out[out_size++] = cur;
+            continue;
+        }
+
+        visited[cur->index] = true;
+        stack[stack_size++] = cur;
+
+        u32 num_inputs = cur->type != NULL ? cur->type->num_inputs : 0;
+        for(u32 i=0; i < num_inputs; i++) {
+            Var* input = cur->inputs[i];
+
+            for(u32 j=0; j<stack_size; j++) {
+                if(stack[j] == input) {
+                    for(u32 k=j; k < stack_size - 1; k++) {
+                        stack[k] = stack[k+1];
+                    }
+                    stack_size--;
+                }
+            }
+
+            stack[stack_size++] = input;
+        }
+    }
+
+
+    graph.vars = PUSH_ARRAY_UNINIT(arena, Var*, out_size);
+    if(graph.vars != NULL) {
+        graph.size = out_size;
+        memcpy(graph.vars, out, sizeof(*out) * out_size);
+    }
+
+    free(visited);
+    free(stack);
+    free(out);
+
+    return graph;
+
+}
+
 
 void forward_pass(Graph* graph) {
     for (u32 i = 0; i < graph->size; i++) {
