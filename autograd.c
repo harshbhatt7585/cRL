@@ -17,6 +17,7 @@ static b32 var_shape_matmul(Var* a, Var* b, u32* rows, u32* cols);
 
 
 const VarType VAR_TYPE_RELU = {
+    .name = "relu",
     .num_inputs = 1,
     .shape = var_shape_same,
     .forward = var_relu_forward,
@@ -24,6 +25,7 @@ const VarType VAR_TYPE_RELU = {
 };
 
 const VarType VAR_TYPE_SOFTMAX = {
+    .name = "softmax",
     .num_inputs = 1,
     .shape = var_shape_same,
     .forward = var_softmax_forward,
@@ -31,6 +33,7 @@ const VarType VAR_TYPE_SOFTMAX = {
 };
 
 const VarType VAR_TYPE_ADD = {
+    .name = "add",
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_add_forward,
@@ -38,6 +41,7 @@ const VarType VAR_TYPE_ADD = {
 };
 
 const VarType VAR_TYPE_SUB = {
+    .name = "sub",
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_sub_forward,
@@ -45,6 +49,7 @@ const VarType VAR_TYPE_SUB = {
 };
 
 const VarType VAR_TYPE_MATMUL = {
+    .name = "matmul",
     .num_inputs = 2,
     .shape = var_shape_matmul,
     .forward = var_matmul_forward,
@@ -52,6 +57,7 @@ const VarType VAR_TYPE_MATMUL = {
 };
 
 const VarType VAR_TYPE_REINFORCE_LOSS = {
+    .name = "reinforce_loss",
     .num_inputs = 2,
     .shape = var_shape_same,
     .forward = var_reinforce_forward,
@@ -219,7 +225,7 @@ Graph build_graph(
             }
             continue;
         }
-
+        
         visited[cur->index] = true;
 
         if (stack_size < model->num_vars) {
@@ -248,6 +254,8 @@ Graph build_graph(
             }
         }
     }
+
+
 
     graph.vars = PUSH_ARRAY_UNINIT(arena, Var*, out_size);
     if (graph.vars != NULL) {

@@ -19,6 +19,7 @@ typedef void VarFunc(Var* var);
 typedef b32 VarShapeFunc(Var* a, Var* b, u32* rows, u32* cols);
 
 struct VarType {
+    const char* name;
     u32 num_inputs;
     VarShapeFunc* shape;
     VarFunc* forward;
