@@ -488,7 +488,7 @@ static void var_sub_backward(Var* var) {
 }
 
 static void var_matmul_forward(Var* var) {
-    mul(var->val, var->inputs[0]->val, var->inputs[1]->val, 1, 0, 0);
+    matmul(var->val, var->inputs[0]->val, var->inputs[1]->val, 1, 0, 0);
 }
 
 static void var_matmul_backward(Var* var) {
@@ -496,11 +496,11 @@ static void var_matmul_backward(Var* var) {
     Var* b = var->inputs[1];
 
     if (var_requires_grad(a)) {
-        mul(a->grad, var->grad, b->val, 0, 0, 1);
+        matmul(a->grad, var->grad, b->val, 0, 0, 1);
     }
 
     if (var_requires_grad(b)) {
-        mul(b->grad, a->val, var->grad, 0, 1, 0);
+        matmul(b->grad, a->val, var->grad, 0, 1, 0);
     }
 }
 

@@ -121,7 +121,7 @@ void _mat_mul_tt(matrix* out, const matrix* a, const matrix* b) {
     }
 }
 
-b32 mul(
+b32 matmul(
     matrix* out, const matrix* a, const matrix* b,
     b8 zero_out, b8 transpose_a, b8 transpose_b
 ) {
@@ -244,25 +244,42 @@ b32 relu_add_grad(matrix* out, const matrix* in, const matrix* grad) {
 }
 
 
+// b32 softmax_add_grad(
+//     matrix* out, const matrix* softmax_out, const matrix* grad
+// ) {
+//     if (out->rows != softmax_out->rows || out->cols != softmax_out->cols) {
+//         return false;
+//     }
+//     if (grad->rows != softmax_out->rows || grad->cols != softmax_out->cols) {
+//         return false;
+//     }
+
+//     u64 size = (u64)softmax_out->rows * softmax_out->cols;
+//     f32 dot = 0.0f;
+//     for (u64 i = 0; i < size; i++) {
+//         dot += grad->data[i] * softmax_out->data[i];
+//     }
+
+//     for (u64 i = 0; i < size; i++) {
+//         out->data[i] += softmax_out->data[i] * (grad->data[i] - dot);
+//     }
+
+//     return true;
+// }
+
 b32 softmax_add_grad(
     matrix* out, const matrix* softmax_out, const matrix* grad
 ) {
-    if (out->rows != softmax_out->rows || out->cols != softmax_out->cols) {
-        return false;
-    }
-    if (grad->rows != softmax_out->rows || grad->cols != softmax_out->cols) {
-        return false;
-    }
-
-    u64 size = (u64)softmax_out->rows * softmax_out->cols;
+    u64 size = (u64)softmax_out->cols * softmax_out->rows;
     f32 dot = 0.0f;
-    for (u64 i = 0; i < size; i++) {
+    for(u64 i=0; i<size; i++) {
         dot += grad->data[i] * softmax_out->data[i];
     }
 
-    for (u64 i = 0; i < size; i++) {
+    for(u64 i=0; i<size; i++) {
         out->data[i] += softmax_out->data[i] * (grad->data[i] - dot);
     }
 
     return true;
+    
 }
