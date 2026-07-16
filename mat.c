@@ -184,6 +184,24 @@ b32 softmax(matrix* out, const matrix* in) {
     return true;
 }
 
+b32 softmax(matrix* out, matrix* in) {
+    u64 size = (u64)out->rows * out->cols;
+    f32 max_value = in->data[0];
+
+    for(u64 i=0; i<size; i++) {
+        max_value = MAX(max_value, data[i]);
+    }
+
+    f32 sum = 0.0f;
+    for(u64 i=0; i<size; i++) {
+        out->data[i] = expf(in->data[i] - max_value);
+        sum += out->data[i];
+    }
+    scale(out, 1.0f / sum);
+
+    return true;
+}
+
 
 b32 reinforce_loss(
     matrix* out, const matrix* probs, const matrix* advantages
@@ -244,42 +262,26 @@ b32 relu_add_grad(matrix* out, const matrix* in, const matrix* grad) {
 }
 
 
-// b32 softmax_add_grad(
-//     matrix* out, const matrix* softmax_out, const matrix* grad
-// ) {
-//     if (out->rows != softmax_out->rows || out->cols != softmax_out->cols) {
-//         return false;
-//     }
-//     if (grad->rows != softmax_out->rows || grad->cols != softmax_out->cols) {
-//         return false;
-//     }
-
-//     u64 size = (u64)softmax_out->rows * softmax_out->cols;
-//     f32 dot = 0.0f;
-//     for (u64 i = 0; i < size; i++) {
-//         dot += grad->data[i] * softmax_out->data[i];
-//     }
-
-//     for (u64 i = 0; i < size; i++) {
-//         out->data[i] += softmax_out->data[i] * (grad->data[i] - dot);
-//     }
-
-//     return true;
-// }
-
 b32 softmax_add_grad(
     matrix* out, const matrix* softmax_out, const matrix* grad
 ) {
-    u64 size = (u64)softmax_out->cols * softmax_out->rows;
+    if (out->rows != softmax_out->rows || out->cols != softmax_out->cols) {
+        return false;
+    }
+    if (grad->rows != softmax_out->rows || grad->cols != softmax_out->cols) {
+        return false;
+    }
+
+    u64 size = (u64)softmax_out->rows * softmax_out->cols;
     f32 dot = 0.0f;
-    for(u64 i=0; i<size; i++) {
+    for (u64 i = 0; i < size; i++) {
         dot += grad->data[i] * softmax_out->data[i];
     }
 
-    for(u64 i=0; i<size; i++) {
+    for (u64 i = 0; i < size; i++) {
         out->data[i] += softmax_out->data[i] * (grad->data[i] - dot);
     }
 
     return true;
-    
 }
+
