@@ -28,7 +28,7 @@ const VarType VAR_TYPE_SOFTMAX = {
     .name = "softmax",
     .num_inputs = 1,
     .shape = var_shape_same,
-    .forward = var_softmax_forward,
+.forward = var_softmax_forward,
     .backward = var_softmax_backward,
 };
 
@@ -399,7 +399,7 @@ void backward_pass(Graph* graph) {
     for (u32 i = 0; i < graph->size; i++) {
         Var* cur = graph->vars[i];
 
-        if ((cur->flags & VAR_FLAG_REQUIRES_GRAD) != VAR_FLAG_REQUIRES_GRAD) {
+        if ((cur->flags & VAR_FLAG_REQUIRES_GRAD) == 0) {
             continue;
         }
 
@@ -424,6 +424,8 @@ void backward_pass(Graph* graph) {
         }
     }
 }
+
+
 
 static b32 var_requires_grad(Var* var) {
     return var != NULL && (var->flags & VAR_FLAG_REQUIRES_GRAD);
